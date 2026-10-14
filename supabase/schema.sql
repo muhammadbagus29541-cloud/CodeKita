@@ -283,7 +283,7 @@ create policy reposts_delete_self on public.project_reposts for delete using (us
 drop policy if exists bookmarks_read_self on public.bookmarks;
 create policy bookmarks_read_self on public.bookmarks for select using (user_id = auth.uid());
 drop policy if exists bookmarks_insert_self on public.bookmarks;
-create policy bookmarks_insert_self on public.bookmarks for insert with check (user_id = auth.uid());
+create policy bookmarks_insert_self on public.bookmarks for insert with check (user_id = auth.uid() and (collection_id is null or exists (select 1 from public.collections c where c.id = bookmarks.collection_id and c.user_id = auth.uid())) and exists (select 1 from public.projects p where p.id = bookmarks.project_id and ((p.status = 'published' and p.visibility = 'public') or p.user_id = auth.uid())));
 drop policy if exists bookmarks_delete_self on public.bookmarks;
 create policy bookmarks_delete_self on public.bookmarks for delete using (user_id = auth.uid());
 
@@ -334,3 +334,7 @@ create policy reports_read_self on public.reports for select using (reporter_id 
 grant usage on schema public to anon, authenticated;
 grant select on public.profiles, public.projects, public.project_likes, public.project_reposts, public.comments, public.follows to anon, authenticated;
 grant select, insert, update, delete on public.profiles, public.projects, public.project_likes, public.project_reposts, public.bookmarks, public.collections, public.follows, public.comments, public.notifications, public.messages, public.reports to authenticated;
+
+revoke update on public.project_likes, public.project_reposts, public.bookmarks, public.follows, public.comments, public.notifications, public.messages from authenticated;
+grant update(is_read) on public.notifications to authenticated;
+grant update(read_at) on public.messages to authenticated;
