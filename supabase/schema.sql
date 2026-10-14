@@ -329,3 +329,8 @@ drop policy if exists reports_insert_self on public.reports;
 create policy reports_insert_self on public.reports for insert with check (reporter_id = auth.uid());
 drop policy if exists reports_read_self on public.reports;
 create policy reports_read_self on public.reports for select using (reporter_id = auth.uid());
+
+
+grant usage on schema public to anon, authenticated;
+grant select on public.profiles, public.projects, public.project_likes, public.project_reposts, public.comments, public.follows to anon, authenticated;
+grant select, insert, update, delete on public.profiles, public.projects, public.project_likes, public.project_reposts, public.bookmarks, public.collections, public.follows, public.comments, public.notifications, public.messages, public.reports to authenticated;
