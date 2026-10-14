@@ -9,7 +9,7 @@
     !String(config.supabaseAnonKey).startsWith('YOUR_')
   );
   const db = configured ? window.supabase.createClient(config.supabaseUrl, config.supabaseAnonKey) : null;
-  const app = { db, user: null, profile: null, ready: false, selectedConversation: null, collectionRows: [], conversationMap: new Map() };
+  const app = { db, user: null, profile: null, ready: false, selectedConversation: null, collectionRows: [], conversationMap: new Map(), channel: null, refreshTimer: null };
   const userKey = id => 'db_' + id;
   const initials = name => String(name || 'CK').trim().split(/\s+/).slice(0, 2).map(part => part[0] || '').join('').toUpperCase() || 'CK';
   const timeAgo = value => {
@@ -500,6 +500,35 @@
   $('#authButton')?.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();openAuth(app.user?'signin':'signin')}});
   $('#messageSearch')?.addEventListener('input',()=>renderConversations());
 
+  function startRealtime() {
+    if(!db)return;
+    if(app.channel)db.removeChannel(app.channel);
+    const schedule=()=>{
+      if(app.refreshTimer)clearTimeout(app.refreshTimer);
+      app.refreshTimer=setTimeout(async()=>{
+        try{
+          await loadOwnProfile();
+          await loadProjects();
+          await Promise.all([loadNotifications(),loadCollections(),loadConversations(),loadProfileCounts(),loadCreators()]);
+          renderFeed();renderExplore();renderSaved();renderProfile();updateAccountUi();
+          if(state.page==='detail')renderDetail();
+          app.ready=true;
+        }catch(error){console.warn('[CodeKita realtime]',error.message)}
+      },350);
+    };
+    app.channel=db.channel('codekita-live')
+      .on('postgres_changes',{event:'*',schema:'public',table:'projects'},schedule)
+      .on('postgres_changes',{event:'*',schema:'public',table:'project_likes'},schedule)
+      .on('postgres_changes',{event:'*',schema:'public',table:'project_reposts'},schedule)
+      .on('postgres_changes',{event:'*',schema:'public',table:'comments'},schedule)
+      .on('postgres_changes',{event:'*',schema:'public',table:'follows'},schedule)
+      .on('postgres_changes',{event:'*',schema:'public',table:'bookmarks'},schedule)
+      .on('postgres_changes',{event:'*',schema:'public',table:'collections'},schedule)
+      .on('postgres_changes',{event:'*',schema:'public',table:'notifications'},schedule)
+      .on('postgres_changes',{event:'*',schema:'public',table:'messages'},schedule)
+      .on('postgres_changes',{event:'*',schema:'public',table:'profiles'},schedule)
+      .subscribe(status=>{if(status==='CHANNEL_ERROR')console.warn('[CodeKita] Realtime channel error; reload to refresh server data.')});
+  }
   async function init() {
     updateAccountUi();
     if(!db){renderFeed();renderExplore();renderSaved();renderProfile();renderNotifications();renderConversations();return}
@@ -507,6 +536,7 @@
       const {data,error}=await db.auth.getSession();if(error)throw error;
       app.user=data.session?.user||null;
       await refreshAll();
+      startRealtime();
       db.auth.onAuthStateChange((event,session)=>{
         app.user=session?.user||null;
         setTimeout(()=>{refreshAll();if(event==='PASSWORD_RECOVERY')openPasswordRecovery()},0);
