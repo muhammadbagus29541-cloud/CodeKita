@@ -305,7 +305,7 @@ create policy follows_delete_self on public.follows for delete using (follower_i
 
 drop policy if exists comments_read_visible_projects on public.comments;
 create policy comments_read_visible_projects on public.comments for select
-using (exists (select 1 from public.projects p where p.id = comments.project_id and ((p.status = 'published' and p.visibility = 'public') or p.user_id = auth.uid()));
+using (exists (select 1 from public.projects p where p.id = comments.project_id and ((p.status = 'published' and p.visibility = 'public') or p.user_id = auth.uid())));
 drop policy if exists comments_insert_self on public.comments;
 create policy comments_insert_self on public.comments for insert with check (user_id = auth.uid() and exists (select 1 from public.projects p where p.id = project_id and p.status = 'published' and p.visibility = 'public'));
 drop policy if exists comments_update_self on public.comments;
