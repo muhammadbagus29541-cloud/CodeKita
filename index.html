@@ -1,15 +1,122 @@
 <!doctype html>
 <html lang="id">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="theme-color" content="#ffffff">
-  <meta name="description" content="CodeKita — ruang untuk membuat, berbagi, dan mempelajari proyek website.">
-  <title>CodeKita</title>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#4657f5">
+  <meta name="description" content="CodeKita — Build. Share. Learn. Prototype sosial untuk membuat dan mempelajari proyek website.">
+  <title>CodeKita — Build. Share. Learn.</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="style.css">
-  <script src="app.js" defer></script>
 </head>
 <body>
-  <main id="app" aria-label="CodeKita"></main>
+  <div class="app-shell">
+    <aside class="sidebar">
+      <a class="brand" href="#" data-page="home"><span class="brand-mark">&lt;/&gt;</span><span>CodeKita</span></a>
+      <button class="mobile-close" id="closeNav" aria-label="Tutup menu">×</button>
+      <nav class="main-nav" aria-label="Navigasi utama">
+        <button class="nav-item active" data-page="home"><span>⌂</span>Beranda</button>
+        <button class="nav-item" data-page="explore"><span>⌕</span>Jelajahi</button>
+        <button class="nav-item" data-page="create"><span>＋</span>Buat</button>
+        <button class="nav-item" data-page="notifications"><span>♧</span>Notifikasi <i class="nav-dot"></i></button>
+        <button class="nav-item" data-page="messages"><span>✉</span>Pesan</button>
+        <button class="nav-item" data-page="saved"><span>▣</span>Tersimpan</button>
+        <button class="nav-item" data-page="profile"><span>◉</span>Profil</button>
+      </nav>
+      <div class="sidebar-bottom">
+        <div class="mini-user"><div class="avatar avatar-me">BS</div><div><strong>Bagas Sajiwo</strong><small>@bagassajiwo</small></div><button class="icon-btn" aria-label="Opsi profil">···</button></div>
+        <div class="sidebar-note"><span class="note-icon">✦</span><div><strong>Terus berkarya</strong><p>Bagikan proyek pertamamu dan belajar bersama komunitas.</p></div></div>
+      </div>
+    </aside>
+
+    <main class="main-area">
+      <header class="topbar">
+        <button class="icon-btn menu-toggle" id="openNav" aria-label="Buka menu">☰</button>
+        <div class="mobile-brand"><span class="brand-mark">&lt;/&gt;</span> CodeKita</div>
+        <label class="searchbox"><span>⌕</span><input id="globalSearch" type="search" placeholder="Cari proyek, kreator, atau tag..." aria-label="Cari"></label>
+        <div class="top-actions"><button class="icon-btn" data-page="notifications" aria-label="Notifikasi">♧<i class="tiny-dot"></i></button><button class="icon-btn" data-page="messages" aria-label="Pesan">✉</button><button class="avatar avatar-me avatar-small" data-page="profile" aria-label="Profil">BS</button></div>
+      </header>
+
+      <section class="page active" id="page-home">
+        <div class="page-heading"><div><p class="eyebrow">KOMUNITAS KREATIF</p><h1>Temukan karya, <span>bangun sesuatu.</span></h1><p class="muted">Inspirasi berikutnya mungkin dimulai dari satu baris kode.</p></div><button class="btn btn-primary" data-page="create">＋ Buat proyek</button></div>
+        <div class="feed-layout">
+          <div class="feed-column">
+            <div class="segmented"><button class="segment active" data-feed="for-you">Untuk Kamu</button><button class="segment" data-feed="following">Mengikuti</button></div>
+            <div id="feedPosts"></div>
+          </div>
+          <aside class="right-rail">
+            <div class="panel welcome-panel"><div class="welcome-art">&lt;/&gt;</div><h3>Ide bagus layak dibagikan.</h3><p class="muted">Buat demo kecil, tunjukkan kode, dan dapatkan masukan dari komunitas.</p><button class="btn btn-primary btn-block" data-page="create">Mulai membuat</button></div>
+            <div class="panel"><div class="panel-heading"><h3>Kreator untuk diikuti</h3><button class="text-btn" data-page="explore">Lihat semua</button></div><div id="suggestedCreators"></div></div>
+            <div class="panel tags-panel"><h3>Jelajahi topik</h3><div class="tag-cloud"><button class="tag" data-tag="CSS">#CSS</button><button class="tag" data-tag="JavaScript">#JavaScript</button><button class="tag" data-tag="Portfolio">#Portfolio</button><button class="tag" data-tag="Mini-game">#MiniGame</button><button class="tag" data-tag="UI Component">#UIComponent</button></div></div>
+            <p class="footer-links">Tentang · Panduan komunitas · Privasi<br>© 2026 CodeKita · Prototype lokal</p>
+          </aside>
+        </div>
+      </section>
+
+      <section class="page" id="page-explore">
+        <div class="page-heading"><div><p class="eyebrow">TEMUKAN INSPIRASI</p><h1>Jelajahi proyek</h1><p class="muted">Temukan ide, pelajari teknik, dan buat versimu sendiri.</p></div></div>
+        <div class="explore-tools"><label class="searchbox wide-search"><span>⌕</span><input id="exploreSearch" type="search" placeholder="Contoh: kalkulator JavaScript"></label><select id="techFilter" aria-label="Filter teknologi"><option value="all">Semua teknologi</option><option>HTML</option><option>CSS</option><option>JavaScript</option></select><select id="levelFilter" aria-label="Filter tingkat"><option value="all">Semua tingkat</option><option>Pemula</option><option>Menengah</option><option>Lanjutan</option></select></div>
+        <div class="category-row"><button class="category active" data-category="Semua">Semua</button><button class="category" data-category="Landing Page">Landing page</button><button class="category" data-category="Portfolio">Portfolio</button><button class="category" data-category="Kalkulator">Kalkulator</button><button class="category" data-category="Mini-game">Mini-game</button><button class="category" data-category="Animasi">Animasi</button><button class="category" data-category="Dashboard">Dashboard</button></div>
+        <div class="section-title"><h2>Proyek pilihan</h2><span class="muted" id="exploreCount"></span></div><div class="project-grid" id="exploreGrid"></div>
+      </section>
+
+      <section class="page" id="page-create">
+        <div class="page-heading"><div><p class="eyebrow">CODEKITA STUDIO</p><h1>Buat proyek baru</h1><p class="muted">Mulai dari template atau masukkan kode milikmu.</p></div><span class="status-pill"><i></i> Draft lokal</span></div>
+        <div class="create-layout">
+          <div class="panel create-form">
+            <div class="form-tabs"><button class="segment active" data-create-mode="templates">Dari template</button><button class="segment" data-create-mode="manual">Kode manual</button></div>
+            <div id="templateChooser"><div class="template-grid">
+              <button class="template-card" data-template="landing"><span class="template-thumb thumb-landing"><b>Make it<br>happen.</b><i></i></span><strong>Landing page</strong><small>Halaman promosi modern</small></button>
+              <button class="template-card" data-template="portfolio"><span class="template-thumb thumb-portfolio"><b>PORTFOLIO<br>2026</b><i></i></span><strong>Portfolio</strong><small>Tampilkan karya terbaik</small></button>
+              <button class="template-card" data-template="calculator"><span class="template-thumb thumb-calc">＋ − × ÷</span><strong>Kalkulator</strong><small>Latihan JavaScript dasar</small></button>
+              <button class="template-card" data-template="game"><span class="template-thumb thumb-game">GRID<br>PLAY</span><strong>Mini-game</strong><small>Eksperimen interaktif</small></button>
+            </div></div>
+            <div class="field"><label for="projectTitle">Nama proyek</label><input id="projectTitle" value="Proyek Pertamaku" maxlength="80"></div>
+            <div class="field"><label for="projectDescription">Deskripsi</label><textarea id="projectDescription" rows="3" placeholder="Ceritakan apa yang dibuat dan apa yang ingin dipelajari..."></textarea></div>
+            <div class="form-row"><div class="field"><label for="projectCategory">Kategori</label><select id="projectCategory"><option>Landing Page</option><option>Portfolio</option><option>Kalkulator</option><option>Mini-game</option><option>Animasi</option><option>Dashboard</option><option>UI Component</option></select></div><div class="field"><label for="projectLevel">Tingkat kesulitan</label><select id="projectLevel"><option>Pemula</option><option>Menengah</option><option>Lanjutan</option></select></div></div>
+            <div class="field"><label>Visibilitas</label><div class="visibility-options"><label><input type="radio" name="visibility" value="public" checked> <span><b>Publik</b><small>Dapat ditemukan komunitas</small></span></label><label><input type="radio" name="visibility" value="private"> <span><b>Privat (simulasi)</b><small>Hanya terlihat di prototype ini</small></span></label></div></div>
+            <div class="form-actions"><button class="btn btn-secondary" id="saveDraft">Simpan draft</button><button class="btn btn-primary" id="publishProject">Publikasikan proyek ↗</button></div>
+          </div>
+          <div class="panel editor-panel"><div class="panel-heading"><div><h3>Live preview</h3><p class="muted small">Pratinjau lokal • jangan masukkan kode rahasia</p></div><button class="icon-btn" id="refreshPreview" aria-label="Muat ulang preview">↻</button></div><div class="preview-frame" id="createPreview"><div class="preview-placeholder"><span class="brand-mark">&lt;/&gt;</span><h2>Preview proyekmu</h2><p>Preview akan tampil di sini saat template dipilih.</p></div></div><div class="code-mini"><div class="code-mini-head"><span>HTML</span><span>CSS</span><span>JS</span><button id="editCodeBtn">Edit kode</button></div><pre id="codeSnippet">&lt;main class="hero"&gt;\n  &lt;h1&gt;Halo, dunia!&lt;/h1&gt;\n  &lt;p&gt;Proyek pertamaku di CodeKita.&lt;/p&gt;\n&lt;/main&gt;</pre></div></div>
+        </div>
+      </section>
+
+      <section class="page" id="page-notifications">
+        <div class="page-heading"><div><p class="eyebrow">AKTIVITAS KOMUNITAS</p><h1>Notifikasi</h1><p class="muted">Hal yang terjadi pada karya dan komunitasmu.</p></div><button class="btn btn-secondary" id="markRead">Tandai semua dibaca</button></div>
+        <div class="panel notification-panel"><div class="notification-tabs"><button class="segment active" data-notif-filter="all">Semua</button><button class="segment" data-notif-filter="like">Like</button><button class="segment" data-notif-filter="comment">Komentar</button><button class="segment" data-notif-filter="follow">Follow</button></div><div id="notificationList"></div></div>
+      </section>
+
+      <section class="page" id="page-messages">
+        <div class="page-heading"><div><p class="eyebrow">RUANG DISKUSI</p><h1>Pesan</h1><p class="muted">Diskusikan ide dan bagikan referensi proyek.</p></div></div>
+        <div class="panel messages-layout"><div class="conversation-list"><label class="searchbox"><span>⌕</span><input id="messageSearch" placeholder="Cari percakapan..."></label><div id="conversationItems"></div></div><div class="conversation-view"><div class="conversation-header"><div class="avatar">AS</div><div><strong>Andi Saputra</strong><small class="online-label">● Aktif sekarang</small></div><button class="icon-btn">···</button></div><div class="chat-messages" id="chatMessages"><div class="day-divider">Hari ini</div><div class="chat-bubble received">Halo, aku lihat proyek kalkulatormu. Keren banget!</div><div class="chat-bubble received">Boleh tahu cara kamu bikin layout grid-nya?</div><div class="chat-bubble sent">Terima kasih! Aku pakai CSS Grid supaya responsif.</div><div class="chat-bubble sent">Nanti aku bagikan referensi kodenya ya.</div></div><form class="message-composer" id="messageForm"><input id="messageInput" placeholder="Tulis pesan..." autocomplete="off"><button class="btn btn-primary" type="submit" aria-label="Kirim pesan">➤</button></form></div></div>
+      </section>
+
+      <section class="page" id="page-saved">
+        <div class="page-heading"><div><p class="eyebrow">REFERENSI KAMU</p><h1>Tersimpan</h1><p class="muted">Kumpulan proyek untuk dipelajari nanti.</p></div><button class="btn btn-secondary" id="newCollection">＋ Koleksi baru</button></div>
+        <div class="collection-row"><button class="collection-card active" data-collection="Semua"><span class="collection-icon purple">▣</span><span><strong>Semua tersimpan</strong><small id="savedTotal">0 proyek</small></span></button><button class="collection-card" data-collection="Belajar HTML"><span class="collection-icon orange">5</span><span><strong>Belajar HTML</strong><small>Privat · Koleksi</small></span></button><button class="collection-card" data-collection="Inspirasi UI"><span class="collection-icon blue">UI</span><span><strong>Inspirasi UI</strong><small>Privat · Koleksi</small></span></button><button class="collection-card" data-collection="Animasi CSS"><span class="collection-icon yellow">✦</span><span><strong>Animasi CSS</strong><small>Privat · Koleksi</small></span></button></div>
+        <div class="section-title"><h2>Proyek yang kamu simpan</h2></div><div class="project-grid" id="savedGrid"></div>
+      </section>
+
+      <section class="page" id="page-profile">
+        <div class="profile-cover"></div><div class="profile-main"><div class="avatar profile-avatar avatar-me">BS</div><div class="profile-actions"><button class="btn btn-secondary" id="editProfile">Edit profil</button><button class="btn btn-secondary">↗ Bagikan</button></div><h1 id="profileName">Bagas Sajiwo</h1><p class="muted">@bagassajiwo · Bergabung Oktober 2026</p><p class="profile-bio" id="profileBio">Pelajar TKJ yang suka bereksperimen dengan web, JavaScript, dan proyek elektronik.</p><div class="profile-links"><span>⌖ Kediri, Indonesia</span><span>↗ bagassajiwo.dev (contoh)</span></div><div class="profile-stats"><span><b id="profilePostCount">3</b> Postingan</span><span><b>1,2k</b> Pengikut</span><span><b>320</b> Mengikuti</span></div><div class="profile-tabs"><button class="segment active" data-profile-tab="projects">Proyek</button><button class="segment" data-profile-tab="saved">Disimpan</button><button class="segment" data-profile-tab="reposts">Repost</button><button class="segment" data-profile-tab="collections">Koleksi</button></div><div class="project-grid" id="profileGrid"></div></div>
+      </section>
+
+      <section class="page" id="page-detail">
+        <button class="back-link" data-page="home">← Kembali ke beranda</button><div id="detailContent"></div>
+      </section>
+
+      <section class="page" id="page-editor">
+        <div class="studio-top"><button class="back-link" data-page="detail">← Kembali ke proyek</button><div><strong>CodeKita Studio</strong><span class="status-pill"><i></i> Tersimpan lokal</span></div><button class="btn btn-primary" id="runEditor">▶ Jalankan</button></div>
+        <div class="studio-layout"><div class="code-workspace"><div class="editor-tabs"><button class="segment active" data-code-tab="html">HTML</button><button class="segment" data-code-tab="css">CSS</button><button class="segment" data-code-tab="js">JavaScript</button><button class="icon-btn" id="copyActiveCode">▢ Salin</button></div><textarea id="codeEditor" spellcheck="false" aria-label="Editor kode"></textarea><div class="editor-status"><span>● HTML / CSS / JavaScript</span><span id="editorLineCount">1 baris</span></div></div><div class="workspace-preview"><div class="preview-toolbar"><strong>Preview</strong><div><button class="device-btn active" data-device="desktop">▰</button><button class="device-btn" data-device="mobile">▯</button><button class="icon-btn" id="refreshEditor">↻</button></div></div><div class="preview-frame" id="editorPreview"><div class="preview-placeholder">Klik Jalankan untuk melihat hasil.</div></div><div class="editor-bottom-actions"><button class="btn btn-secondary" id="copyAllCode">Salin semua kode</button><button class="btn btn-secondary" id="downloadCode">Unduh HTML</button><button class="btn btn-primary" id="remixFromEditor">Simpan versi</button></div></div></div>
+      </section>
+    </main>
+  </div>
+
+  <nav class="mobile-nav" aria-label="Navigasi mobile"><button class="active" data-page="home"><span>⌂</span><small>Beranda</small></button><button data-page="explore"><span>⌕</span><small>Jelajahi</small></button><button data-page="create"><span class="mobile-create">＋</span><small>Buat</small></button><button data-page="saved"><span>▣</span><small>Tersimpan</small></button><button data-page="profile"><span>◉</span><small>Profil</small></button></nav>
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+  <dialog id="modal"><form method="dialog" class="modal-card"><button class="modal-close" aria-label="Tutup">×</button><div id="modalContent"></div></form></dialog>
+  <script src="app.js"></script>
 </body>
 </html>
