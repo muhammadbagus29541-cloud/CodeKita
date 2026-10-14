@@ -17,7 +17,7 @@ Gunakan hanya publishable/anon key di frontend. **Jangan pernah memasukkan servi
 
 ## 2. Jalankan aplikasi
 
-Buka `index.html` melalui server web lokal atau hosting statis. Contoh: aktifkan GitHub Pages pada repository ini melalui **Settings → Pages**. Karena SDK Supabase dimuat dari CDN, aplikasi memerlukan koneksi internet.
+Buka `index.html` melalui server web lokal atau hosting statis. Workflow `.github/workflows/pages.yml` sudah disiapkan untuk deployment otomatis. Aktifkan **Settings → Pages → Build and deployment → Source: GitHub Actions** pada repository ini. Setelah workflow sukses, alamat situs akan tampil pada halaman Actions/Pages. Karena SDK Supabase dimuat dari CDN, aplikasi memerlukan koneksi internet.
 
 Jika konfigurasi belum diisi, banner status akan ditampilkan dan fitur online tidak akan mengaku berhasil.
 
