@@ -338,3 +338,20 @@ grant select, insert, update, delete on public.profiles, public.projects, public
 revoke update on public.project_likes, public.project_reposts, public.bookmarks, public.follows, public.comments, public.notifications, public.messages from authenticated;
 grant update(is_read) on public.notifications to authenticated;
 grant update(read_at) on public.messages to authenticated;
+
+do $$
+declare
+  target_table text;
+begin
+  if exists (select 1 from pg_publication where pubname = 'supabase_realtime') then
+    foreach target_table in array array['projects','project_likes','project_reposts','comments','follows','bookmarks','collections','notifications','messages','profiles']
+    loop
+      if not exists (
+        select 1 from pg_publication_tables
+        where pubname = 'supabase_realtime' and schemaname = 'public' and tablename = target_table
+      ) then
+        execute format('alter publication supabase_realtime add table public.%I', target_table);
+      end if;
+    end loop;
+  end if;
+end $$;
