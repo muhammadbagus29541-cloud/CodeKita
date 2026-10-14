@@ -4,21 +4,20 @@ Platform sosial untuk membuat, menjalankan, berbagi, dan mempelajari proyek webs
 
 ## Status
 
-Kerangka awal proyek. Tampilan antarmuka sengaja dikosongkan untuk memulai desain dari awal. Fitur dan komponen UI belum ditambahkan.
+UI/UX prototype frontend. Seluruh data akun contoh, postingan, notifikasi, percakapan, kreator rekomendasi, dan interaksi sosial tiruan telah dihapus. Feed dan daftar komunitas dimulai dalam keadaan kosong.
+
+Tidak ada backend atau akun pengguna sungguhan yang terhubung. Profil lokal pada prototype bukan akun terautentikasi.
 
 ## Struktur
 
-- `index.html` — struktur dokumen utama
-- `style.css` — gaya dasar halaman kosong
-- `app.js` — titik masuk JavaScript
+- `index.html` — struktur halaman
+- `style.css` — gaya antarmuka responsif
+- `app.js` — interaksi frontend dan keadaan kosong
 
-## Menjalankan secara lokal
+## Menjalankan
 
-Buka `index.html` di browser modern. Tidak membutuhkan dependensi atau proses build.
+Buka `index.html` pada browser modern. Tidak membutuhkan proses build.
 
-## Rencana pengembangan
+## Catatan
 
-1. Menentukan sistem desain dan navigasi.
-2. Membuat halaman utama dan profil.
-3. Menambahkan preview HTML/CSS/JavaScript.
-4. Menambahkan interaksi komunitas dan fitur Remix.
+Fitur akun, penyimpanan data, komentar, like, pesan, dan publikasi nyata membutuhkan backend serta sistem autentikasi sebelum digunakan oleh pengguna sungguhan.
