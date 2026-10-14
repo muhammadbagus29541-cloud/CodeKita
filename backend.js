@@ -64,6 +64,11 @@
       if (!app.ready) setStatus('<strong>Menghubungkan ke CodeKita…</strong> Mengambil status akun dan data dari server.');
     }
   }
+  function openPasswordRecovery() {
+    if(!db||!app.user)return;
+    showModal('Atur kata sandi baru','<div class="field"><label for="newPassword">Kata sandi baru</label><input id="newPassword" type="password" minlength="8" autocomplete="new-password" required></div><p class="muted">Gunakan minimal 8 karakter.</p>','Simpan kata sandi',()=>true);
+    $('#modalConfirm').onclick=async()=>{const password=$('#newPassword').value;if(password.length<8){toast('Kata sandi minimal 8 karakter.');return}const {error}=await db.auth.updateUser({password});if(error){fail(error);return}$('#modal').close();toast('Kata sandi berhasil diperbarui.')};
+  }
   function openAuth(mode = 'signin') {
     if (!db) {
       showModal('Hubungkan backend', '<p>Autentikasi sungguhan memerlukan proyek Supabase.</p><div class="auth-note">1. Buat proyek di Supabase. 2. Jalankan <code>supabase/schema.sql</code> di SQL Editor. 3. Masukkan Project URL dan publishable/anon key ke <code>supabase-config.js</code>. Lihat README untuk panduan lengkap.</div><p><a href="https://supabase.com/dashboard" target="_blank" rel="noreferrer">Buka Supabase Dashboard ↗</a></p>', 'Mengerti', () => true);
@@ -88,8 +93,9 @@
       const button = $('#authSubmit'); button.disabled = true; button.textContent = 'Memproses…';
       try {
         if (signup) {
-          const { error } = await db.auth.signUp({ email, password, options: { data: { display_name: name } } });
+          const { data, error } = await db.auth.signUp({ email, password, options: { data: { display_name: name } } });
           if (error) throw error;
+          if(data?.session){$('#modal').close();toast('Akun berhasil dibuat.');return}
           err.textContent = 'Pendaftaran diterima. Periksa email untuk verifikasi sebelum masuk jika verifikasi email diaktifkan.';
           err.classList.remove('auth-error'); err.classList.add('auth-note'); err.hidden = false;
           button.textContent = 'Email verifikasi dikirim';
@@ -160,6 +166,19 @@
     if (reposted.error) throw reposted.error;
     app.reposted = new Set((reposted.data || []).map(r => r.project_id));
     state.reposted = new Set(app.reposted);
+  }
+  async function loadCreators() {
+    if(!db){app.creatorProfiles=[];return}
+    const query=db.from('profiles').select('id,username,display_name,bio,avatar_url').order('created_at',{ascending:false}).limit(12);
+    const {data,error}=await query;if(error)throw error;
+    app.creatorProfiles=(data||[]).filter(p=>p.id!==app.user?.id);
+    app.creatorProfiles.forEach(p=>{const key=userKey(p.id);users[key]={id:p.id,name:p.display_name||'Pengguna',handle:'@'+p.username,initials:initials(p.display_name),color:'avatar-me',bio:p.bio||''}});
+    renderCreators();
+  }
+  function renderCreators(){
+    const wrap=$('#suggestedCreators');if(!wrap)return;
+    const people=(app.creatorProfiles||[]).slice(0,6);
+    wrap.innerHTML=people.length?people.map(p=>{const key=userKey(p.id),following=state.followed.has(key);return '<div class="creator-row">'+avatar(key)+'<div class="creator-info"><strong>'+escapeHtml(p.display_name||'Pengguna')+'</strong><small>'+escapeHtml('@'+p.username)+'</small></div><button class="follow-btn '+(following?'following':'')+'" data-follow="'+escapeHtml(key)+'">'+(following?'Mengikuti':'Ikuti')+'</button></div>'}).join(''):'<div class="empty-state">Belum ada kreator lain. Akun baru akan muncul di sini setelah mendaftar.</div>';
   }
   async function loadOwnProfile() {
     if (!app.user) { app.profile = null; return; }
@@ -252,7 +271,7 @@
     try {
       await loadOwnProfile();
       await loadProjects();
-      await Promise.all([loadNotifications(),loadCollections(),loadConversations(),loadProfileCounts()]);
+      await Promise.all([loadNotifications(),loadCollections(),loadConversations(),loadProfileCounts(),loadCreators()]);
       renderFeed(); renderExplore(); renderSaved(); renderProfile(); updateAccountUi();
       app.ready=true;
       const banner=$('#backendBanner'); if(banner)banner.hidden=true;
@@ -288,7 +307,7 @@
     try {
       if(exists){const {error}=await db.from('follows').delete().eq('follower_id',app.user.id).eq('following_id',target);if(error)throw error;state.followed.delete(key)}
       else {const {error}=await db.from('follows').insert({follower_id:app.user.id,following_id:target});if(error)throw error;state.followed.add(key)}
-      renderCurrentPage();
+      renderCurrentPage();await loadProfileCounts();renderCreators();
     } catch(error){fail(error)}
   }
   async function onRepost(id) {
@@ -303,7 +322,7 @@
   }
   allProjects = function(){ return [...projects, ...userProjects.filter(p=>p.status==='published' && p.visibility==='public')]; };
   getProject = function(id){ return [...userProjects, ...projects].find(p=>p.id===id) || null; };
-  renderFeed = function(){ const list=state.feed==='following'?allProjects().filter(p=>state.followed.has(p.user)):allProjects(); $('#feedPosts').innerHTML=list.length?list.slice(0,8).map(postMarkup).join(''):'<div class="empty-state"><strong>Belum ada proyek publik.</strong>Proyek yang dipublikasikan oleh pengguna akan muncul di sini.<br><button class="btn btn-primary" data-page="create" style="margin-top:14px">Buat proyek pertama</button></div>'; $('#suggestedCreators').innerHTML='<div class="empty-state">Kreator yang dapat direkomendasikan akan muncul setelah ada akun dan proyek publik.</div>'; };
+  renderFeed = function(){ const list=state.feed==='following'?allProjects().filter(p=>state.followed.has(p.user)):allProjects(); $('#feedPosts').innerHTML=list.length?list.slice(0,8).map(postMarkup).join(''):'<div class="empty-state"><strong>Belum ada proyek publik.</strong>Proyek yang dipublikasikan oleh pengguna akan muncul di sini.<br><button class="btn btn-primary" data-page="create" style="margin-top:14px">Buat proyek pertama</button></div>'; renderCreators(); };
   renderExplore = function(){ const query=($('#exploreSearch')?.value||$('#globalSearch')?.value||'').toLowerCase().trim(); const tech=$('#techFilter')?.value||'all'; const level=$('#levelFilter')?.value||'all'; const list=allProjects().filter(p=>(state.category==='Semua'||p.category===state.category||p.tags.includes(state.category))&&(tech==='all'||p.tags.includes(tech))&&(level==='all'||p.level===level)&&(!query||[p.title,p.description,users[p.user]?.name||'',users[p.user]?.handle||'',...p.tags].join(' ').toLowerCase().includes(query))); $('#exploreGrid').innerHTML=list.length?list.map(projectCard).join(''):'<div class="empty-state"><strong>Belum ada proyek yang cocok.</strong>Ubah filter atau kembali lagi setelah ada proyek publik.</div>'; $('#exploreCount').textContent=list.length+' proyek'; };
   renderSaved = function(){ const available=[...projects,...userProjects]; const list=available.filter(p=>state.saved.has(p.id)&&(state.savedCollection==='Semua'||p.collection===state.savedCollection)); $('#savedGrid').innerHTML=list.length?list.map(projectCard).join(''):'<div class="empty-state"><strong>Belum ada proyek tersimpan di koleksi ini.</strong>Simpan proyek yang ingin kamu pelajari nanti.</div>'; $('#savedTotal').textContent=state.saved.size+' proyek'; };
   function renderCurrentPage() {
@@ -488,9 +507,9 @@
       const {data,error}=await db.auth.getSession();if(error)throw error;
       app.user=data.session?.user||null;
       await refreshAll();
-      db.auth.onAuthStateChange((_event,session)=>{
+      db.auth.onAuthStateChange((event,session)=>{
         app.user=session?.user||null;
-        setTimeout(()=>refreshAll(),0);
+        setTimeout(()=>{refreshAll();if(event==='PASSWORD_RECOVERY')openPasswordRecovery()},0);
       });
     } catch(error) {
       setStatus('<strong>Koneksi backend gagal.</strong> '+escapeHtml(error.message||'Periksa konfigurasi.'),true);
