@@ -150,15 +150,16 @@
     const liked = app.user ? await db.from('project_likes').select('project_id').eq('user_id',app.user.id) : {data:[]};
     if (liked.error) throw liked.error;
     state.liked.clear(); (liked.data || []).forEach(r => state.liked.add(r.project_id));
-    const saved = app.user ? await db.from('bookmarks').select('project_id').eq('user_id',app.user.id) : {data:[]};
+    const saved = app.user ? await db.from('bookmarks').select('project_id,collection_id,collections(name)').eq('user_id',app.user.id) : {data:[]};
     if (saved.error) throw saved.error;
-    state.saved.clear(); (saved.data || []).forEach(r => state.saved.add(r.project_id));
+    state.saved.clear(); (saved.data || []).forEach(r => { state.saved.add(r.project_id); const project=[...projects,...userProjects].find(p=>p.id===r.project_id); if(project) project.collection=r.collections?.name||''; });
     const followed = app.user ? await db.from('follows').select('following_id').eq('follower_id',app.user.id) : {data:[]};
     if (followed.error) throw followed.error;
     state.followed.clear(); (followed.data || []).forEach(r => state.followed.add(userKey(r.following_id)));
     const reposted = app.user ? await db.from('project_reposts').select('project_id').eq('user_id',app.user.id) : {data:[]};
     if (reposted.error) throw reposted.error;
-    state.reposted = new Set((reposted.data || []).map(r => r.project_id));
+    app.reposted = new Set((reposted.data || []).map(r => r.project_id));
+    state.reposted = new Set(app.reposted);
   }
   async function loadOwnProfile() {
     if (!app.user) { app.profile = null; return; }
@@ -229,6 +230,7 @@
     if(error){fail(error);return}
     const wrap=$('#chatMessages'); if(!wrap)return;
     wrap.innerHTML='';
+    if(!(data||[]).length){const empty=document.createElement('div');empty.className='empty-state';empty.textContent='Belum ada pesan. Kirim pesan pertama untuk memulai percakapan.';wrap.appendChild(empty);}
     (data||[]).forEach(m=>{
       const b=document.createElement('div');b.className='chat-bubble '+(m.sender_id===app.user.id?'sent':'received');b.textContent=m.body;wrap.appendChild(b);
     });
@@ -236,12 +238,21 @@
     await db.from('messages').update({read_at:new Date().toISOString()}).eq('recipient_id',app.user.id).eq('sender_id',otherId).is('read_at',null);
     $$('.conversation-item').forEach(el=>el.classList.toggle('active',el.dataset.conversation===key));
   }
+  async function loadProfileCounts(){
+    if(!app.user||!db){$('#profileFollowerCount').textContent='0';$('#profileFollowingCount').textContent='0';return;}
+    const [followers,following]=await Promise.all([
+      db.from('follows').select('follower_id',{count:'exact',head:true}).eq('following_id',app.user.id),
+      db.from('follows').select('following_id',{count:'exact',head:true}).eq('follower_id',app.user.id)
+    ]);
+    if(followers.error)throw followers.error;if(following.error)throw following.error;
+    $('#profileFollowerCount').textContent=String(followers.count||0);$('#profileFollowingCount').textContent=String(following.count||0);
+  }
   async function refreshAll() {
     if (!db) { updateAccountUi(); renderFeed(); renderExplore(); renderSaved(); renderProfile(); renderNotifications(); renderConversations(); return; }
     try {
       await loadOwnProfile();
       await loadProjects();
-      await Promise.all([loadNotifications(),loadCollections(),loadConversations()]);
+      await Promise.all([loadNotifications(),loadCollections(),loadConversations(),loadProfileCounts()]);
       renderFeed(); renderExplore(); renderSaved(); renderProfile(); updateAccountUi();
       app.ready=true;
       const banner=$('#backendBanner'); if(banner)banner.hidden=true;
@@ -264,7 +275,7 @@
     const exists=state.saved.has(id);
     try {
       if(exists){const {error}=await db.from('bookmarks').delete().eq('project_id',id).eq('user_id',app.user.id);if(error)throw error;state.saved.delete(id)}
-      else {const {error}=await db.from('bookmarks').insert({project_id:id,user_id:app.user.id});if(error)throw error;state.saved.add(id)}
+      else {const selectedCollection=app.collectionRows.find(c=>c.name===state.savedCollection);const {error}=await db.from('bookmarks').insert({project_id:id,user_id:app.user.id,collection_id:selectedCollection?.id||null});if(error)throw error;state.saved.add(id)}
       renderCurrentPage();
     } catch(error){fail(error)}
   }
@@ -290,6 +301,11 @@
       await loadProjects();renderCurrentPage();toast(exists?'Repost dibatalkan.':'Proyek dibagikan ulang.');
     } catch(error){fail(error)}
   }
+  allProjects = function(){ return [...projects, ...userProjects.filter(p=>p.status==='published' && p.visibility==='public')]; };
+  getProject = function(id){ return [...userProjects, ...projects].find(p=>p.id===id) || null; };
+  renderFeed = function(){ const list=state.feed==='following'?allProjects().filter(p=>state.followed.has(p.user)):allProjects(); $('#feedPosts').innerHTML=list.length?list.slice(0,8).map(postMarkup).join(''):'<div class="empty-state"><strong>Belum ada proyek publik.</strong>Proyek yang dipublikasikan oleh pengguna akan muncul di sini.<br><button class="btn btn-primary" data-page="create" style="margin-top:14px">Buat proyek pertama</button></div>'; $('#suggestedCreators').innerHTML='<div class="empty-state">Kreator yang dapat direkomendasikan akan muncul setelah ada akun dan proyek publik.</div>'; };
+  renderExplore = function(){ const query=($('#exploreSearch')?.value||$('#globalSearch')?.value||'').toLowerCase().trim(); const tech=$('#techFilter')?.value||'all'; const level=$('#levelFilter')?.value||'all'; const list=allProjects().filter(p=>(state.category==='Semua'||p.category===state.category||p.tags.includes(state.category))&&(tech==='all'||p.tags.includes(tech))&&(level==='all'||p.level===level)&&(!query||[p.title,p.description,users[p.user]?.name||'',users[p.user]?.handle||'',...p.tags].join(' ').toLowerCase().includes(query))); $('#exploreGrid').innerHTML=list.length?list.map(projectCard).join(''):'<div class="empty-state"><strong>Belum ada proyek yang cocok.</strong>Ubah filter atau kembali lagi setelah ada proyek publik.</div>'; $('#exploreCount').textContent=list.length+' proyek'; };
+  renderSaved = function(){ const available=[...projects,...userProjects]; const list=available.filter(p=>state.saved.has(p.id)&&(state.savedCollection==='Semua'||p.collection===state.savedCollection)); $('#savedGrid').innerHTML=list.length?list.map(projectCard).join(''):'<div class="empty-state"><strong>Belum ada proyek tersimpan di koleksi ini.</strong>Simpan proyek yang ingin kamu pelajari nanti.</div>'; $('#savedTotal').textContent=state.saved.size+' proyek'; };
   function renderCurrentPage() {
     if (state.page==='detail') renderDetail();
     else if (state.page==='home') renderFeed();
@@ -416,7 +432,7 @@
     if(!requireUser())return;
     const input=$('#messageInput');const body=input.value.trim();
     const target=app.selectedConversation&&app.conversationMap.get(app.selectedConversation);
-    if(!target){toast('Pilih percakapan terlebih dahulu.');return}
+    if(!target){toast('Buka profil kreator melalui detail proyek, lalu pilih Pesan.');return}
     if(!body)return;
     const {error}=await db.from('messages').insert({sender_id:app.user.id,recipient_id:target,body});
     if(error){fail(error);return}
@@ -426,11 +442,11 @@
     const list=state.profileTab==='saved'?[...projects,...userProjects].filter(p=>state.saved.has(p.id)):state.profileTab==='reposts'?[...projects,...userProjects].filter(p=>app.reposted?.has(p.id)):state.profileTab==='collections'?[]:userProjects;
     $('#profileGrid').innerHTML=list.filter(p=>p.status==='published'||p.userId===app.user?.id).map(projectCard).join('')||'<div class="empty-state"><strong>Belum ada proyek di sini.</strong> Buat proyek atau simpan referensi untuk mengisinya.</div>';
     $('#profilePostCount').textContent=String(userProjects.filter(p=>p.status==='published').length);
-    $('#profileFollowerCount').textContent='…';$('#profileFollowingCount').textContent=String(state.followed.size);
+    $('#profileFollowerCount').textContent='0';$('#profileFollowingCount').textContent=String(state.followed.size);
   }
   // The UI's data arrays now represent actual database records, never seeded sample accounts.
   renderProfile = overrideProfileRender;
-  renderDetail = ((base) => function(){base(); if(app.user && state.page==='detail') loadComments()})(renderDetail);
+  renderDetail = ((base) => function(){base(); if(state.page==='detail'){const p=getProject(state.currentProject);const head=$('#detailContent .detail-project-info .post-head');if(head&&app.user&&p&&p.userId!==app.user.id&&!head.querySelector('[data-message-user]')){const btn=document.createElement('button');btn.className='btn btn-secondary';btn.type='button';btn.dataset.messageUser=p.user;btn.textContent='Pesan';head.appendChild(btn);}if(app.user)loadComments();}})(renderDetail);
   window.CodeKita = { get backendReady(){return Boolean(db)}, get authenticated(){return Boolean(app.user)}, openAuth, refresh:refreshAll };
 
   document.addEventListener('click', async event => {
@@ -449,10 +465,11 @@
     const shareProfile=target.closest('#shareProfile');if(shareProfile){event.preventDefault();event.stopImmediatePropagation();copyText(location.href.split('#')[0]+'#profile-'+(app.profile?.username||''));return}
     const publishBtn=target.closest('#publishProject');if(publishBtn){event.preventDefault();event.stopImmediatePropagation();await publish(false);return}
     const draftBtn=target.closest('#saveDraft');if(draftBtn){event.preventDefault();event.stopImmediatePropagation();await publish(true);return}
-    const editCode=target.closest('#editCodeBtn');if(editCode){event.preventDefault();event.stopImmediatePropagation();state.currentProject=userProjects[0]?.id||null;go('editor');return}
+    const editCode=target.closest('#editCodeBtn');if(editCode){event.preventDefault();event.stopImmediatePropagation();state.currentProject=userProjects.find(p=>p.status==='draft')?.id||userProjects.find(p=>p.userId===app.user?.id)?.id||null;go('editor');if(!state.currentProject){state.editorCode={...templateCode(state.selectedTemplate)};$('#codeEditor').value=state.editorCode.html||'';updateLineCount()}return}
     const mark=target.closest('#markRead');if(mark){event.preventDefault();event.stopImmediatePropagation();await markNotificationsRead();return}
     const remixSave=target.closest('#remixFromEditor');if(remixSave){event.preventDefault();event.stopImmediatePropagation();await saveEditorVersion();return}
     const toCreate=target.closest('[data-page="create"]');if(toCreate&&!app.user){event.preventDefault();event.stopImmediatePropagation();openAuth('signin');return}
+    const messageUser=target.closest('[data-message-user]');if(messageUser){event.preventDefault();event.stopImmediatePropagation();if(!requireUser())return;const key=messageUser.dataset.messageUser;const targetId=users[key]?.id;if(!targetId||targetId===app.user.id){toast('Percakapan ini tidak tersedia.');return}app.conversationMap.set(key,targetId);app.selectedConversation=key;if(!conversations.some(c=>c.user===key))conversations.unshift({user:key,last:'Mulai percakapan',time:'baru',active:true});renderConversations();go('messages');await loadChat(key);return}
     const tab=target.closest('[data-conversation]');if(tab){event.preventDefault();event.stopImmediatePropagation();await loadChat(tab.dataset.conversation);return}
   }, true);
 
