@@ -26,7 +26,7 @@
         <button class="nav-item" data-page="profile"><span>◉</span>Profil</button>
       </nav>
       <div class="sidebar-bottom">
-        <div class="mini-user"><div class="avatar avatar-me">BS</div><div><strong>Bagas Sajiwo</strong><small>@bagassajiwo</small></div><button class="icon-btn" aria-label="Opsi profil">···</button></div>
+        <div class="mini-user" id="accountSummary"><div class="avatar avatar-me">?</div><div><strong>Belum masuk</strong><small>Akun CodeKita</small></div></div>
         <div class="sidebar-note"><span class="note-icon">✦</span><div><strong>Terus berkarya</strong><p>Bagikan proyek pertamamu dan belajar bersama komunitas.</p></div></div>
       </div>
     </aside>
@@ -36,9 +36,10 @@
         <button class="icon-btn menu-toggle" id="openNav" aria-label="Buka menu">☰</button>
         <div class="mobile-brand"><span class="brand-mark">&lt;/&gt;</span> CodeKita</div>
         <label class="searchbox"><span>⌕</span><input id="globalSearch" type="search" placeholder="Cari proyek, kreator, atau tag..." aria-label="Cari"></label>
-        <div class="top-actions"><button class="icon-btn" data-page="notifications" aria-label="Notifikasi">♧<i class="tiny-dot"></i></button><button class="icon-btn" data-page="messages" aria-label="Pesan">✉</button><button class="avatar avatar-me avatar-small" data-page="profile" aria-label="Profil">BS</button></div>
+        <div class="top-actions"><button class="icon-btn" data-page="notifications" aria-label="Notifikasi">♧</button><button class="icon-btn" data-page="messages" aria-label="Pesan">✉</button><button class="btn btn-secondary auth-button" id="authButton">Masuk</button><button class="avatar avatar-me avatar-small" id="profileShortcut" data-page="profile" aria-label="Profil">?</button></div>
       </header>
 
+      <div class="backend-banner" id="backendBanner"><strong>Backend belum terhubung.</strong> Agar akun, postingan, komentar, dan interaksi tersimpan online, siapkan Supabase lalu ikuti petunjuk di <a href="README.md" target="_blank" rel="noreferrer">README</a>.</div>
       <section class="page active" id="page-home">
         <div class="page-heading"><div><p class="eyebrow">KOMUNITAS KREATIF</p><h1>Temukan karya, <span>bangun sesuatu.</span></h1><p class="muted">Inspirasi berikutnya mungkin dimulai dari satu baris kode.</p></div><button class="btn btn-primary" data-page="create">＋ Buat proyek</button></div>
         <div class="feed-layout">
@@ -73,7 +74,7 @@
               <button class="template-card" data-template="calculator"><span class="template-thumb thumb-calc">＋ − × ÷</span><strong>Kalkulator</strong><small>Latihan JavaScript dasar</small></button>
               <button class="template-card" data-template="game"><span class="template-thumb thumb-game">GRID<br>PLAY</span><strong>Mini-game</strong><small>Eksperimen interaktif</small></button>
             </div></div>
-            <div class="field"><label for="projectTitle">Nama proyek</label><input id="projectTitle" value="Proyek Pertamaku" maxlength="80"></div>
+            <div class="field"><label for="projectTitle">Nama proyek</label><input id="projectTitle" value="" placeholder="Contoh: Portfolio Pribadi" maxlength="80"></div>
             <div class="field"><label for="projectDescription">Deskripsi</label><textarea id="projectDescription" rows="3" placeholder="Ceritakan apa yang dibuat dan apa yang ingin dipelajari..."></textarea></div>
             <div class="form-row"><div class="field"><label for="projectCategory">Kategori</label><select id="projectCategory"><option>Landing Page</option><option>Portfolio</option><option>Kalkulator</option><option>Mini-game</option><option>Animasi</option><option>Dashboard</option><option>UI Component</option></select></div><div class="field"><label for="projectLevel">Tingkat kesulitan</label><select id="projectLevel"><option>Pemula</option><option>Menengah</option><option>Lanjutan</option></select></div></div>
             <div class="field"><label>Visibilitas</label><div class="visibility-options"><label><input type="radio" name="visibility" value="public" checked> <span><b>Publik</b><small>Dapat ditemukan komunitas</small></span></label><label><input type="radio" name="visibility" value="private"> <span><b>Privat (simulasi)</b><small>Hanya terlihat di prototype ini</small></span></label></div></div>
@@ -100,7 +101,7 @@
       </section>
 
       <section class="page" id="page-profile">
-        <div class="profile-cover"></div><div class="profile-main"><div class="avatar profile-avatar avatar-me">BS</div><div class="profile-actions"><button class="btn btn-secondary" id="editProfile">Edit profil</button><button class="btn btn-secondary">↗ Bagikan</button></div><h1 id="profileName">Bagas Sajiwo</h1><p class="muted">@bagassajiwo · Bergabung Oktober 2026</p><p class="profile-bio" id="profileBio">Pelajar TKJ yang suka bereksperimen dengan web, JavaScript, dan proyek elektronik.</p><div class="profile-links"><span>⌖ Kediri, Indonesia</span><span>↗ bagassajiwo.dev (contoh)</span></div><div class="profile-stats"><span><b id="profilePostCount">3</b> Postingan</span><span><b>1,2k</b> Pengikut</span><span><b>320</b> Mengikuti</span></div><div class="profile-tabs"><button class="segment active" data-profile-tab="projects">Proyek</button><button class="segment" data-profile-tab="saved">Disimpan</button><button class="segment" data-profile-tab="reposts">Repost</button><button class="segment" data-profile-tab="collections">Koleksi</button></div><div class="project-grid" id="profileGrid"></div></div>
+        <div class="profile-cover"></div><div class="profile-main"><div class="avatar profile-avatar avatar-me" id="profileAvatar">?</div><div class="profile-actions"><button class="btn btn-secondary" id="editProfile">Edit profil</button><button class="btn btn-secondary" id="shareProfile">↗ Bagikan</button></div><h1 id="profileName">Belum masuk</h1><p class="muted" id="profileHandle">@akun-belum-terhubung</p><p class="profile-bio" id="profileBio">Masuk untuk mengatur profilmu.</p><div class="profile-links"><span id="profileLocation"></span><span id="profileWebsite"></span></div><div class="profile-stats"><span><b id="profilePostCount">0</b> Postingan</span><span><b id="profileFollowerCount">0</b> Pengikut</span><span><b id="profileFollowingCount">0</b> Mengikuti</span></div><div class="profile-tabs"><button class="segment active" data-profile-tab="projects">Proyek</button><button class="segment" data-profile-tab="saved">Disimpan</button><button class="segment" data-profile-tab="reposts">Repost</button><button class="segment" data-profile-tab="collections">Koleksi</button></div><div class="project-grid" id="profileGrid"></div></div>
       </section>
 
       <section class="page" id="page-detail">
@@ -117,6 +118,9 @@
   <nav class="mobile-nav" aria-label="Navigasi mobile"><button class="active" data-page="home"><span>⌂</span><small>Beranda</small></button><button data-page="explore"><span>⌕</span><small>Jelajahi</small></button><button data-page="create"><span class="mobile-create">＋</span><small>Buat</small></button><button data-page="saved"><span>▣</span><small>Tersimpan</small></button><button data-page="profile"><span>◉</span><small>Profil</small></button></nav>
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
   <dialog id="modal"><form method="dialog" class="modal-card"><button class="modal-close" aria-label="Tutup">×</button><div id="modalContent"></div></form></dialog>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="supabase-config.js"></script>
   <script src="app.js"></script>
+  <script src="backend.js"></script>
 </body>
 </html>
