@@ -1,19 +1,6 @@
 -- CodeKita group messaging migration
 -- Run this file once in Supabase SQL Editor after the existing schema.sql.
 
-create or replace function public.is_conversation_group_member(p_group_id uuid)
-returns boolean
-language sql
-stable
-security definer
-set search_path = public
-as $
-  select exists (
-    select 1 from public.conversation_group_members m
-    where m.group_id = p_group_id and m.user_id = auth.uid()
-  );
-$;
-
 create table if not exists public.conversation_groups (
   id uuid primary key default gen_random_uuid(),
   name text not null check (char_length(trim(name)) between 2 and 80),
@@ -28,6 +15,19 @@ create table if not exists public.conversation_group_members (
   joined_at timestamptz not null default now(),
   primary key (group_id, user_id)
 );
+
+create or replace function public.is_conversation_group_member(p_group_id uuid)
+returns boolean
+language sql
+stable
+security definer
+set search_path = public
+as $
+  select exists (
+    select 1 from public.conversation_group_members m
+    where m.group_id = p_group_id and m.user_id = auth.uid()
+  );
+$;
 
 create table if not exists public.group_messages (
   id uuid primary key default gen_random_uuid(),
