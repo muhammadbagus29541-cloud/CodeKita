@@ -35,3 +35,11 @@
 /* Use device/browser back navigation; modal dialogs can also be dismissed by Back/Escape */
 .mobile-close,.modal-close{display:none!important}
 .modal-card{position:relative}
+
+.code-editor-wrap{position:relative;flex:1;min-height:470px;overflow:hidden;background:#131a2b}
+.code-editor-wrap #codeHighlight,.code-editor-wrap #codeEditor{position:absolute;inset:0;width:100%;height:100%;margin:0;padding:18px;border:0;outline:0;white-space:pre;overflow:auto;tab-size:2;font:12px/1.8 "JetBrains Mono",monospace;letter-spacing:normal;word-spacing:normal}
+.code-editor-wrap #codeHighlight{pointer-events:none;color:#d6e0f7;background:transparent;z-index:1;scrollbar-width:none}
+.code-editor-wrap #codeEditor{z-index:2;resize:none;background:transparent;color:transparent;-webkit-text-fill-color:transparent;caret-color:#f8fafc;overflow:auto}
+.code-editor-wrap #codeEditor::selection{background:#586b9b80;-webkit-text-fill-color:transparent}
+.tok-tag{color:#7dd3fc}.tok-attr{color:#c4b5fd}.tok-string{color:#a7f3d0}.tok-comment{color:#718096;font-style:italic}.tok-keyword{color:#c084fc;font-weight:600}.tok-literal{color:#f9a8d4}.tok-number{color:#fbbf24}.tok-builtin{color:#67e8f9}.tok-function{color:#fde68a}.tok-property{color:#7dd3fc}.tok-selector{color:#f0abfc}
+@media(max-width:800px){.code-editor-wrap{min-height:330px}.code-editor-wrap #codeHighlight,.code-editor-wrap #codeEditor{font-size:11px;padding:14px}}
