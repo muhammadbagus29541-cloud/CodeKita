@@ -373,3 +373,41 @@ body.dark-mode .modal-close {
   background: #202a40;
   color: var(--ink);
 }
+
+
+/* Ensure the native group dialog follows the active dark theme */
+body.dark-mode #modal,
+body.dark-mode #modal .modal-card {
+  background-color: var(--surface) !important;
+  color: var(--ink) !important;
+  border-color: var(--line) !important;
+}
+body.dark-mode #modal .field,
+body.dark-mode #modal .field > span,
+body.dark-mode #modal label,
+body.dark-mode #modal strong {
+  color: var(--ink) !important;
+}
+body.dark-mode #modal p,
+body.dark-mode #modal .muted {
+  color: var(--muted) !important;
+}
+body.dark-mode #modal input:not([type="checkbox"]),
+body.dark-mode #modal textarea,
+body.dark-mode #modal select {
+  background-color: #111827 !important;
+  color: var(--ink) !important;
+  border-color: var(--line) !important;
+}
+body.dark-mode #modal input::placeholder,
+body.dark-mode #modal textarea::placeholder {
+  color: var(--muted) !important;
+}
+body.dark-mode #modal .group-member-picker {
+  background-color: #111827 !important;
+  border-color: var(--line) !important;
+}
+body.dark-mode #modal .group-member-option {
+  background-color: #202a40 !important;
+  color: var(--ink) !important;
+}
