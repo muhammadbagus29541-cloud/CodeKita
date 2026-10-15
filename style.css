@@ -186,3 +186,87 @@ body.dark-mode .modal-close {
 body.dark-mode .footer-links {
   color: var(--muted);
 }
+
+
+/* Notification bell, unread indicator, and actionable notification rows. */
+.notification-icon,
+.notification-nav-item {
+  position: relative;
+}
+.notification-bell {
+  display: inline-grid;
+  place-items: center;
+  line-height: 1;
+}
+.notification-dot {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  width: 9px;
+  height: 9px;
+  padding: 0;
+  border: 2px solid var(--surface);
+  border-radius: 50%;
+  background: #ef4444;
+  box-shadow: 0 0 0 1px rgba(239,68,68,.12);
+}
+.notification-dot[hidden] {
+  display: none !important;
+}
+.nav-item.notification-nav-item .notification-dot {
+  top: 8px;
+  right: 12px;
+}
+.mobile-nav .notification-icon {
+  overflow: visible;
+}
+.mobile-nav .notification-dot {
+  top: 5px;
+  right: calc(50% - 17px);
+  border-color: var(--surface);
+}
+.notification-row {
+  width: 100%;
+  font: inherit;
+  color: inherit;
+  text-align: left;
+  cursor: pointer;
+  background: transparent;
+}
+.notification-row:hover,
+.notification-row:focus-visible {
+  background: var(--primary-soft);
+  outline-offset: -3px;
+}
+.notification-row.unread {
+  background: color-mix(in srgb, var(--primary-soft) 55%, var(--surface));
+}
+body.dark-mode .notification-row:hover,
+body.dark-mode .notification-row:focus-visible {
+  background: #252d50;
+}
+body.dark-mode .notification-row.unread {
+  background: #1c2540;
+}
+body.dark-mode .notification-dot {
+  border-color: var(--surface);
+}
+@media (max-width: 900px) {
+  .mobile-nav {
+    display: flex;
+    justify-content: space-around;
+    gap: 0;
+  }
+  .mobile-nav > button {
+    position: relative;
+    flex: 1 1 0;
+    min-width: 0;
+  }
+  .mobile-nav > button small {
+    font-size: 9px;
+    white-space: nowrap;
+  }
+  .mobile-nav .notification-bell {
+    font-size: 19px;
+  }
+}
