@@ -20,7 +20,7 @@
         <button class="nav-item active" data-page="home"><span>⌂</span>Beranda</button>
         <button class="nav-item" data-page="explore"><span>⌕</span>Jelajahi</button>
         <button class="nav-item" data-page="create"><span>＋</span>Buat</button>
-        <button class="nav-item" data-page="notifications"><span>♧</span>Notifikasi</button>
+        <button class="nav-item notification-nav-item" data-page="notifications"><span class="notification-bell" aria-hidden="true">♧</span>Notifikasi<i class="notification-dot" data-notification-badge hidden aria-label="Notifikasi baru"></i></button>
         <button class="nav-item" data-page="messages"><span>✉</span>Pesan</button>
         <button class="nav-item" data-page="saved"><span>▣</span>Tersimpan</button>
         <button class="nav-item" data-page="profile"><span>◉</span>Profil</button><button class="nav-item" data-page="settings"><span>⚙</span>Pengaturan</button>
@@ -36,7 +36,7 @@
         <button class="icon-btn menu-toggle" id="openNav" aria-label="Buka menu">☰</button>
         <div class="mobile-brand"><span class="brand-mark">&lt;/&gt;</span> CodeKita</div>
         <label class="searchbox"><span>⌕</span><input id="globalSearch" type="search" placeholder="Cari proyek, kreator, atau tag..." aria-label="Cari"></label>
-        <div class="top-actions"><button class="icon-btn" data-page="notifications" aria-label="Notifikasi">♧</button><button class="icon-btn" data-page="messages" aria-label="Pesan">✉</button><button class="btn btn-secondary auth-button" id="authButton">Masuk</button><button class="avatar avatar-me avatar-small" id="profileShortcut" data-page="profile" aria-label="Profil">?</button></div>
+        <div class="top-actions"><button class="icon-btn notification-icon" data-page="notifications" aria-label="Notifikasi"><span class="notification-bell" aria-hidden="true">♧</span><i class="notification-dot" data-notification-badge hidden></i></button><button class="icon-btn" data-page="messages" aria-label="Pesan">✉</button><button class="btn btn-secondary auth-button" id="authButton">Masuk</button><button class="avatar avatar-me avatar-small" id="profileShortcut" data-page="profile" aria-label="Profil">?</button></div>
       </header>
 
       <div class="backend-banner" id="backendBanner"><strong>Backend belum terhubung.</strong> Agar akun, postingan, komentar, dan interaksi tersimpan online, siapkan Supabase lalu ikuti petunjuk di <a href="README.md" target="_blank" rel="noreferrer">README</a>.</div>
@@ -115,7 +115,7 @@
     </main>
   </div>
 
-  <nav class="mobile-nav" aria-label="Navigasi mobile"><button class="active" data-page="home"><span>⌂</span><small>Beranda</small></button><button data-page="explore"><span>⌕</span><small>Jelajahi</small></button><button data-page="create"><span class="mobile-create">＋</span><small>Buat</small></button><button data-page="saved"><span>▣</span><small>Tersimpan</small></button><button data-page="profile"><span>◉</span><small>Profil</small></button></nav>
+  <nav class="mobile-nav" aria-label="Navigasi mobile"><button class="active" data-page="home"><span>⌂</span><small>Beranda</small></button><button data-page="explore"><span>⌕</span><small>Jelajahi</small></button><button data-page="create"><span class="mobile-create">＋</span><small>Buat</small></button><button class="notification-icon" data-page="notifications" aria-label="Notifikasi"><span class="notification-bell" aria-hidden="true">♧</span><small>Notifikasi</small><i class="notification-dot" data-notification-badge hidden></i></button><button data-page="saved"><span>▣</span><small>Tersimpan</small></button><button data-page="profile"><span>◉</span><small>Profil</small></button></nav>
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
   <dialog id="modal"><form method="dialog" class="modal-card"><div id="modalContent"></div></form></dialog>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
