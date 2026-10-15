@@ -685,6 +685,32 @@
   $('#authButton')?.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();openAuth(app.user?'signin':'signin')}});
   $('#messageSearch')?.addEventListener('input',()=>renderConversations());
 
+  let reconnectTimer=null;
+  let reconnectAttempt=0;
+  let realtimeStarting=false;
+  async function reconnectBackend(reason='retry') {
+    if(!db||realtimeStarting)return;
+    realtimeStarting=true;
+    try {
+      const {data,error}=await db.auth.getSession();
+      if(error)throw error;
+      app.user=data.session?.user||null;
+      await refreshAll();
+      if(app.ready){
+        reconnectAttempt=0;
+        startRealtime();
+      } else {
+        throw new Error('Backend belum siap; mencoba kembali.');
+      }
+    } catch(error) {
+      console.warn('[CodeKita] Reconnect '+reason+':',error.message);
+      reconnectAttempt=Math.min(reconnectAttempt+1,6);
+      clearTimeout(reconnectTimer);
+      reconnectTimer=setTimeout(()=>{realtimeStarting=false;reconnectBackend('automatic retry')},Math.min(30000,1500*Math.pow(2,reconnectAttempt)));
+      return;
+    }
+    realtimeStarting=false;
+  }
   function startRealtime() {
     if(!db)return;
     if(app.channel)db.removeChannel(app.channel);
@@ -698,7 +724,13 @@
           renderFeed();renderExplore();renderSaved();renderProfile();updateAccountUi();
           if(state.page==='detail')renderDetail();
           app.ready=true;
-        }catch(error){console.warn('[CodeKita realtime]',error.message)}
+          const banner=$('#backendBanner');if(banner)banner.hidden=true;
+        }catch(error){
+          console.warn('[CodeKita realtime]',error.message);
+          app.ready=false;
+          setStatus('<strong>Koneksi terputus.</strong> CodeKita sedang mencoba menghubungkan ulang…',true);
+          reconnectBackend('realtime refresh');
+        }
       },350);
     };
     app.channel=db.channel('codekita-live')
@@ -712,7 +744,14 @@
       .on('postgres_changes',{event:'*',schema:'public',table:'notifications'},schedule)
       .on('postgres_changes',{event:'*',schema:'public',table:'messages'},schedule)
       .on('postgres_changes',{event:'*',schema:'public',table:'profiles'},schedule)
-      .subscribe(status=>{if(status==='CHANNEL_ERROR')console.warn('[CodeKita] Realtime channel error; reload to refresh server data.')});
+      .subscribe(status=>{
+        if(status==='SUBSCRIBED'){reconnectAttempt=0;const banner=$('#backendBanner');if(banner&&app.ready)banner.hidden=true}
+        if(['CHANNEL_ERROR','TIMED_OUT','CLOSED'].includes(status)){
+          app.ready=false;
+          setStatus('<strong>Koneksi realtime terputus.</strong> Mencoba menghubungkan ulang secara otomatis…',true);
+          reconnectBackend(status);
+        }
+      });
   }
   async function init() {
     updateAccountUi();
