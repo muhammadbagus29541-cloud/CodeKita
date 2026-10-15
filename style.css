@@ -327,3 +327,49 @@ body.dark-mode .new-group-icon,body.dark-mode .chat-profile-btn{background:var(-
   .chat-profile-btn{padding:8px;font-size:11px}
   .chat-back{display:inline-flex}
 }
+
+
+/* Group creation modal theme support */
+body.dark-mode dialog,
+body.dark-mode .modal-card {
+  background: var(--surface);
+  color: var(--ink);
+  border-color: var(--line);
+}
+body.dark-mode .modal-card h2,
+body.dark-mode .modal-card strong,
+body.dark-mode .modal-card label,
+body.dark-mode .modal-card .field > span {
+  color: var(--ink);
+}
+body.dark-mode .modal-card p,
+body.dark-mode .modal-card .muted {
+  color: var(--muted);
+}
+body.dark-mode .modal-card .field input,
+body.dark-mode .modal-card .field textarea,
+body.dark-mode .modal-card .field select,
+body.dark-mode .modal-card input:not([type="checkbox"]) {
+  background: #111827;
+  color: var(--ink);
+  border-color: var(--line);
+}
+body.dark-mode .modal-card input::placeholder {
+  color: var(--muted);
+}
+body.dark-mode .group-member-picker {
+  background: #111827;
+  border-color: var(--line);
+}
+body.dark-mode .group-member-option {
+  background: #202a40;
+  color: var(--ink);
+  border-color: var(--line);
+}
+body.dark-mode .group-member-option input {
+  accent-color: var(--primary);
+}
+body.dark-mode .modal-close {
+  background: #202a40;
+  color: var(--ink);
+}
