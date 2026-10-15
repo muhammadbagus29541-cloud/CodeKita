@@ -21,7 +21,7 @@
         <button class="nav-item" data-page="explore"><span>⌕</span>Jelajahi</button>
         <button class="nav-item" data-page="create"><span>＋</span>Buat</button>
         <button class="nav-item notification-nav-item" data-page="notifications"><span class="notification-bell" aria-hidden="true">🔔</span>Notifikasi<i class="notification-dot" data-notification-badge hidden aria-label="Notifikasi baru"></i></button>
-        <button class="nav-item" data-page="messages"><span>✉</span>Pesan</button>
+        <button class="nav-item" data-page="messages"><span>➤</span>Pesan</button>
         <button class="nav-item" data-page="saved"><span>▣</span>Tersimpan</button>
         <button class="nav-item" data-page="profile"><span>◉</span>Profil</button><button class="nav-item" data-page="settings"><span>⚙</span>Pengaturan</button>
       </nav>
@@ -36,7 +36,7 @@
         <button class="icon-btn menu-toggle" id="openNav" aria-label="Buka menu">☰</button>
         <div class="mobile-brand"><span class="brand-mark">&lt;/&gt;</span> CodeKita</div>
         <label class="searchbox"><span>⌕</span><input id="globalSearch" type="search" placeholder="Cari proyek, kreator, atau tag..." aria-label="Cari"></label>
-        <div class="top-actions"><button class="icon-btn notification-icon" data-page="notifications" aria-label="Notifikasi"><span class="notification-bell" aria-hidden="true">🔔</span><i class="notification-dot" data-notification-badge hidden></i></button><button class="icon-btn" data-page="messages" aria-label="Pesan">✉</button><button class="btn btn-secondary auth-button" id="authButton">Masuk</button><button class="avatar avatar-me avatar-small" id="profileShortcut" data-page="profile" aria-label="Profil">?</button></div>
+        <div class="top-actions"><button class="icon-btn notification-icon" data-page="notifications" aria-label="Notifikasi"><span class="notification-bell" aria-hidden="true">🔔</span><i class="notification-dot" data-notification-badge hidden></i></button><button class="icon-btn" data-page="messages" aria-label="Pesan">➤</button><button class="btn btn-secondary auth-button" id="authButton">Masuk</button><button class="avatar avatar-me avatar-small" id="profileShortcut" data-page="profile" aria-label="Profil">?</button></div>
       </header>
 
       <div class="backend-banner" id="backendBanner"><strong>Backend belum terhubung.</strong> Agar akun, postingan, komentar, dan interaksi tersimpan online, siapkan Supabase lalu ikuti petunjuk di <a href="README.md" target="_blank" rel="noreferrer">README</a>.</div>
@@ -89,9 +89,24 @@
         <div class="panel notification-panel"><div class="notification-tabs"><button class="segment active" data-notif-filter="all">Semua</button><button class="segment" data-notif-filter="like">Like</button><button class="segment" data-notif-filter="comment">Komentar</button><button class="segment" data-notif-filter="follow">Follow</button><button class="segment" data-notif-filter="repost">Repost</button><button class="segment" data-notif-filter="message">Pesan</button></div><div id="notificationList"></div></div>
       </section>
 
-      <section class="page" id="page-messages">
-        <div class="page-heading"><div><p class="eyebrow">RUANG DISKUSI</p><h1>Pesan</h1><p class="muted">Diskusikan ide dan bagikan referensi proyek.</p></div></div>
-        <div class="panel messages-layout"><div class="conversation-list"><label class="searchbox"><span>⌕</span><input id="messageSearch" placeholder="Cari percakapan..."></label><div id="conversationItems"></div></div><div class="conversation-view"><div class="conversation-header"><button class="chat-back" id="chatBack" aria-label="Kembali">←</button><div class="avatar" id="chatAvatar">?</div><div class="chat-person-info"><strong id="chatPersonName">Pilih percakapan</strong><small class="online-label" id="chatPersonHandle">Pesan pribadi</small></div><button class="chat-info-btn" id="chatInfo" aria-label="Info kontak">ⓘ</button></div><div class="chat-messages" id="chatMessages"><div class="empty-state">Pilih percakapan untuk melihat pesan.</div></div><form class="message-composer" id="messageForm"><input id="messageInput" placeholder="Tulis pesan..." autocomplete="off"><button class="btn btn-primary" type="submit" aria-label="Kirim pesan">➤</button></form></div></div>
+      <section class="page messages-page" id="page-messages">
+        <div class="messages-heading"><div><p class="eyebrow">RUANG DISKUSI</p><h1>Pesan</h1><p class="muted">Percakapan pribadi dan grup.</p></div><button class="btn btn-primary" id="newGroupButton" type="button"><span aria-hidden="true">＋</span> Grup baru</button></div>
+        <div class="panel messages-layout">
+          <aside class="conversation-list" aria-label="Daftar kontak dan percakapan">
+            <div class="conversation-tools"><label class="searchbox"><span>⌕</span><input id="messageSearch" placeholder="Cari kontak..." autocomplete="off"></label><button class="icon-btn new-group-icon" id="newGroupIcon" type="button" aria-label="Buat grup">＋</button></div>
+            <div id="conversationItems"><div class="empty-state">Memuat percakapan...</div></div>
+          </aside>
+          <section class="conversation-view" aria-label="Ruang chat">
+            <header class="conversation-header">
+              <button class="chat-back" id="chatBack" type="button" aria-label="Kembali ke daftar kontak">←</button>
+              <div class="avatar" id="chatAvatar">?</div>
+              <div class="chat-person-info"><strong id="chatPersonName">Pilih percakapan</strong><small class="online-label" id="chatPersonHandle">Pesan pribadi</small></div>
+              <button class="chat-profile-btn" id="chatProfile" type="button" aria-label="Lihat profil kontak"><span aria-hidden="true">◉</span><span>Profil</span></button>
+            </header>
+            <div class="chat-messages" id="chatMessages"><div class="empty-state">Pilih kontak di sebelah kiri untuk mulai mengobrol.</div></div>
+            <form class="message-composer" id="messageForm"><input id="messageInput" placeholder="Tulis pesan..." autocomplete="off" maxlength="4000"><button class="btn btn-primary" type="submit" aria-label="Kirim pesan">➤</button></form>
+          </section>
+        </div>
       </section>
 
       <section class="page" id="page-settings"><div class="page-heading"><div><p class="eyebrow">PREFERENSI AKUN</p><h1>Pengaturan</h1><p class="muted">Atur tampilan, privasi, dan aktivitas CodeKita.</p></div></div><div class="settings-layout"><nav class="settings-nav"><button class="settings-tab active" data-settings-tab="general">Tampilan</button><button class="settings-tab" data-settings-tab="privacy">Privasi</button><button class="settings-tab" data-settings-tab="activity">Riwayat komentar & like</button><button class="settings-tab" data-settings-tab="blocked">Blacklist</button><button class="settings-tab" data-settings-tab="notifications">Notifikasi</button></nav><div class="settings-content"><section data-settings-section="general"><h2>Tampilan</h2><label class="setting-row"><span><strong>Mode gelap</strong><small>Ubah tampilan aplikasi.</small></span><input id="settingDarkMode" type="checkbox"></label><label class="setting-row"><span><strong>Animasi</strong><small>Aktifkan animasi ringan.</small></span><input id="settingAnimations" type="checkbox" checked></label></section><section data-settings-section="privacy" hidden><h2>Privasi</h2><label class="setting-row"><span><strong>Izinkan pesan</strong><small>Preferensi pesan pribadi.</small></span><input id="settingMessages" type="checkbox" checked></label></section><section data-settings-section="activity" hidden><h2>Riwayat aktivitas</h2><div id="activityHistory"></div><button class="btn btn-secondary" id="clearActivityHistory">Hapus riwayat lokal</button></section><section data-settings-section="blocked" hidden><h2>Blacklist</h2><div id="blockedUsers"><p class="muted">Belum ada pengguna diblokir.</p></div></section><section data-settings-section="notifications" hidden><h2>Notifikasi</h2><label class="setting-row"><span><strong>Notifikasi komentar</strong></span><input id="settingCommentNotifications" type="checkbox" checked></label><label class="setting-row"><span><strong>Notifikasi like</strong></span><input id="settingLikeNotifications" type="checkbox" checked></label></section><p class="settings-note">Pengaturan ini tersimpan lokal di browser, belum disinkronkan dengan Supabase.</p></div></div></section><section class="page" id="page-saved">
