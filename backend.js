@@ -354,23 +354,35 @@
   async function addComment() {
     if(!requireUser())return;
     const input=$('#commentInput');const body=input?.value.trim();
+    const file=$('#commentMedia')?.files?.[0]||null;
     const p=getProject(state.currentProject);
     if(!p){toast('Proyek tidak ditemukan.');return}
-    if($('#commentMedia')?.files?.length){toast('Lampiran gambar/GIF belum tersimpan ke server. Hapus lampiran untuk mengirim komentar teks.');return}
-    if(!body){toast('Tulis komentar sebelum mengirim.');input?.focus();return}
+    if(!body&&!file){toast('Tulis komentar atau lampirkan gambar/GIF.');input?.focus();return}
+    if(file&&(!file.type.startsWith('image/')&&!/\.gif$/i.test(file.name))){toast('Pilih gambar atau GIF yang valid.');return}
+    if(file&&file.size>5*1024*1024){toast('Ukuran maksimum gambar/GIF adalah 5 MB.');return}
     try {
-      const {error}=await db.from('comments').insert({project_id:p.id,user_id:app.user.id,body});
+      let mediaUrl=null;
+      if(file){
+        const safeName=file.name.replace(/[^a-zA-Z0-9._-]/g,'_');
+        const path=app.user.id+'/'+p.id+'/'+crypto.randomUUID()+'-'+safeName;
+        const {error:uploadError}=await db.storage.from('comment-media').upload(path,file,{cacheControl:'3600',upsert:false,contentType:file.type||'image/gif'});
+        if(uploadError)throw uploadError;
+        mediaUrl=db.storage.from('comment-media').getPublicUrl(path).data.publicUrl;
+      }
+      const {error}=await db.from('comments').insert({project_id:p.id,user_id:app.user.id,body:body||'Lampiran',media_url:mediaUrl});
       if(error)throw error;
       input.value='';
+      const mediaInput=$('#commentMedia');if(mediaInput)mediaInput.value='';
+      const preview=$('#commentMediaPreview');if(preview){preview.hidden=true;preview.replaceChildren()}
       await loadProjects();
       renderDetail();
-      toast('Komentar dikirim.');
+      toast('Komentar berhasil dikirim.');
     } catch(error){fail(error)}
   }
   async function loadComments() {
     const p=getProject(state.currentProject);
     if(!p||!db)return;
-    const {data,error}=await db.from('comments').select('id,body,user_id,created_at,profiles!comments_user_id_fkey(id,display_name,username,bio)').eq('project_id',p.id).order('created_at',{ascending:true}).limit(200);
+    const {data,error}=await db.from('comments').select('id,body,media_url,user_id,created_at,profiles!comments_user_id_fkey(id,display_name,username,bio)').eq('project_id',p.id).order('created_at',{ascending:true}).limit(200);
     if(error){console.warn('[CodeKita] comments:',error.message);return}
     const panel=$('.detail-side .panel');
     const form=$('#commentForm');
@@ -388,8 +400,7 @@
       const row=document.createElement('div');row.className='comment-row';row.dataset.liveComment='true';
       const av=document.createElement('div');av.className='avatar avatar-me';av.textContent=initials(person.display_name);
       const content=document.createElement('div');content.className='comment-content';
-      const text=document.createElement('p');const strong=document.createElement('strong');strong.textContent=person.display_name||'Pengguna';text.append(strong,document.createElement('br'),document.createTextNode(c.body));
-      const small=document.createElement('small');small.textContent=timeAgo(c.created_at);content.append(text,small);row.append(av,content);panel.insertBefore(row,form);
+      const text=document.createElement('p');const strong=document.createElement('strong');strong.textContent=person.display_name||'Pengguna';text.append(strong,document.createElement('br'),document.createTextNode(c.body==='Lampiran'&&c.media_url?'':c.body));content.append(text);if(c.media_url){const media=document.createElement('img');media.src=c.media_url;media.alt='Lampiran komentar';media.className='comment-image';media.loading='lazy';content.append(media)}const small=document.createElement('small');small.textContent=timeAgo(c.created_at);content.append(small);row.append(av,content);panel.insertBefore(row,form);
     });
   }
   async function saveEditorVersion() {
