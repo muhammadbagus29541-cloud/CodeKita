@@ -46,7 +46,27 @@ function highlightCode(source,language){
  return code+'\n';
 }
 function syncCodeHighlight(){const editor=$('#codeEditor'),layer=$('#codeHighlight');if(!editor||!layer)return;layer.innerHTML=highlightCode(editor.value,state.activeCodeTab);layer.scrollTop=editor.scrollTop;layer.scrollLeft=editor.scrollLeft}
-function loadEditor(){const p=getProject(state.currentProject);state.editorCode=p?{...p.code}:{html:'',css:'',js:''};state.activeCodeTab='html';$('[data-code-tab]').forEach(b=>b.classList.toggle('active',b.dataset.codeTab==='html'));$('#codeEditor').value=state.editorCode.html||'';updateLineCount();syncCodeHighlight()}
+function editorDiagnostics(source,language){
+ const errors=[];
+ if(language==='html'){
+  const opens=(source.match(/<[a-z][\w-]*(?:\s[^<>]*?)?>/gi)||[]).filter(t=>!/^<(area|base|br|col|embed|hr|img|input|link|meta|param|source|track|wbr)\b/i.test(t)&&!/^<\//.test(t));
+  const closes=(source.match(/<\/[a-z][\w-]*\s*>/gi)||[]);
+  const stack=[];
+  source.replace(/<\/?([a-z][\w-]*)\b[^>]*>/gi,(tag,raw)=>{const name=raw.toLowerCase();if(/^<\//.test(tag)){if(stack[stack.length-1]===name)stack.pop();else if(stack.includes(name))errors.push('Tag '+name+' ditutup tidak berurutan')}else if(!/\/>$/.test(tag)&&!(/^(area|base|br|col|embed|hr|img|input|link|meta|param|source|track|wbr)$/.test(name)))stack.push(name)});
+  stack.forEach(tag=>errors.push('Tag <'+tag+'> belum ditutup'));
+ }else if(language==='css'){
+  let depth=0;for(const ch of source){if(ch==='{')depth++;if(ch==='}')depth--;if(depth<0){errors.push('Ada kurung } tanpa pasangan {');break}}if(depth>0)errors.push('Ada '+depth+' kurung { yang belum ditutup');
+ }else{
+  try{new Function(source)}catch(e){errors.push(e.message||'Sintaks JavaScript tidak valid')}
+ }
+ return errors;
+}
+function renderEditorDiagnostics(){
+ const box=$('#editorDiagnostics');if(!box)return;
+ const languages=['html','css','js'];const issues=languages.flatMap(lang=>editorDiagnostics(state.editorCode[lang]||'',lang).map(message=>({lang,message})));
+ box.innerHTML=issues.length?'<strong>'+issues.length+' potensi masalah</strong><ul>'+issues.slice(0,8).map(x=>'<li><b>'+x.lang.toUpperCase()+'</b> — '+x.message.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')+'</li>').join('')+'</ul>':'<strong class="diagnostic-ok">Tidak ditemukan masalah sintaks dasar.</strong>';
+}
+function loadEditor(){const p=getProject(state.currentProject);state.editorCode=p?{...p.code}:{html:'',css:'',js:''};state.activeCodeTab='html';$('[data-code-tab]').forEach(b=>b.classList.toggle('active',b.dataset.codeTab==='html'));$('#codeEditor').value=state.editorCode.html||'';updateLineCount();syncCodeHighlight();renderEditorDiagnostics()}
 function updateLineCount(){$('#editorLineCount').textContent=`${($('#codeEditor').value.match(/\n/g)||[]).length+1} baris`}
 function runEditorPreview(){const html=state.editorCode.html||'';const css=state.editorCode.css||'';const js=state.editorCode.js||'';const frame=$('#editorPreview');const cleanHtml=html.replace(/<\/?body\b[^>]*>/gi,'').replace(/<\/?html\b[^>]*>/gi,'').replace(/<\/?head\b[^>]*>/gi,'').replace(/<!doctype[^>]*>/gi,'');const safeCss=css.replace(/<\/style/gi,'<\\/style');const safeJs=js.replace(/<\/script/gi,'<\\/script');const doc='<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><style>body{font-family:Arial,sans-serif}'+safeCss+'</style></head><body>'+cleanHtml+'<script>try{'+safeJs+'}catch(e){document.body.insertAdjacentHTML("beforeend","<pre>Preview error</pre>")}<\/script></body></html>';frame.innerHTML='';const iframe=document.createElement('iframe');iframe.setAttribute('sandbox','allow-scripts');iframe.title='Preview kode pengguna';iframe.style.cssText='width:100%;height:100%;min-height:300px;border:0;background:white;display:block';frame.appendChild(iframe);iframe.srcdoc=doc;toast('Preview dijalankan dalam sandbox iframe.')}
 function remixProject(id){const p=getProject(id);if(!p){toast('Belum ada proyek untuk di-remix.');return}state.currentProject=id;state.editorCode={...p.code};go('editor');toast('Salinan proyek dimuat ke Studio. Kredit sumber tetap dicatat.')}
@@ -71,7 +91,7 @@ document.addEventListener('click',e=>{
  const nf=e.target.closest('[data-notif-filter]');if(nf){state.notifFilter=nf.dataset.notifFilter;$$('[data-notif-filter]').forEach(b=>b.classList.toggle('active',b===nf));renderNotifications();return}
  const col=e.target.closest('[data-collection]');if(col){state.savedCollection=col.dataset.collection;$$('[data-collection]').forEach(b=>b.classList.toggle('active',b===col));renderSaved();return}
  const pt=e.target.closest('[data-profile-tab]');if(pt){state.profileTab=pt.dataset.profileTab;$$('[data-profile-tab]').forEach(b=>b.classList.toggle('active',b===pt));renderProfile();return}
- const ct=e.target.closest('[data-code-tab]');if(ct){state.activeCodeTab=ct.dataset.codeTab;$$('[data-code-tab]').forEach(b=>b.classList.toggle('active',b===ct));$('#codeEditor').value=state.editorCode[state.activeCodeTab]||'';updateLineCount();syncCodeHighlight();return}
+ const ct=e.target.closest('[data-code-tab]');if(ct){state.activeCodeTab=ct.dataset.codeTab;$$('[data-code-tab]').forEach(b=>b.classList.toggle('active',b===ct));$('#codeEditor').value=state.editorCode[state.activeCodeTab]||'';updateLineCount();syncCodeHighlight();renderEditorDiagnostics();return}
  const device=e.target.closest('[data-device]');if(device){$$('[data-device]').forEach(b=>b.classList.toggle('active',b===device));$('#editorPreview').classList.toggle('mobile-mode',device.dataset.device==='mobile');return}
  const conv=e.target.closest('[data-conversation]');if(conv){$$('.conversation-item').forEach(b=>b.classList.toggle('active',b===conv));return}
 });
@@ -88,8 +108,8 @@ $('#messageSearch').addEventListener('input',renderConversations);
 $('#messageForm').addEventListener('submit',e=>{e.preventDefault();const input=$('#messageInput');const val=input.value.trim();if(!val)return;const bubble=document.createElement('div');bubble.className='chat-bubble sent';bubble.textContent=val;$('#chatMessages').appendChild(bubble);input.value='';$('#chatMessages').scrollTop=$('#chatMessages').scrollHeight;toast('Backend belum terhubung untuk mengirim pesan.')});
 $('#commentForm')?.addEventListener('submit',e=>{e.preventDefault();const input=$('#commentInput');if(!input.value.trim())return;const row=document.createElement('div');row.className='comment-row';row.innerHTML=`${avatar('u5')}<div class="comment-content"><p><strong>Pengguna</strong><br>${escapeHtml(input.value.trim())}</p><small>Baru saja</small></div>`;$('.detail-side .panel').prepend(row);input.value='';toast('Komentar membutuhkan koneksi backend.')});
 $('#runEditor').addEventListener('click',runEditorPreview);$('#refreshEditor').addEventListener('click',runEditorPreview);
-$('#codeEditor').addEventListener('input',()=>{state.editorCode[state.activeCodeTab]=$('#codeEditor').value;updateLineCount();syncCodeHighlight()});$('#codeEditor').addEventListener('scroll',()=>{const layer=$('#codeHighlight');layer.scrollTop=$('#codeEditor').scrollTop;layer.scrollLeft=$('#codeEditor').scrollLeft});
-$('#codeEditor').addEventListener('keydown',e=>{if(e.key==='Tab'){e.preventDefault();const a=e.target.selectionStart,b=e.target.selectionEnd;e.target.setRangeText('  ',a,b,'end');state.editorCode[state.activeCodeTab]=e.target.value;updateLineCount();syncCodeHighlight()}});
+$('#codeEditor').addEventListener('input',()=>{state.editorCode[state.activeCodeTab]=$('#codeEditor').value;updateLineCount();syncCodeHighlight();renderEditorDiagnostics()});$('#codeEditor').addEventListener('scroll',()=>{const layer=$('#codeHighlight');layer.scrollTop=$('#codeEditor').scrollTop;layer.scrollLeft=$('#codeEditor').scrollLeft});
+$('#codeEditor').addEventListener('keydown',e=>{if(e.key==='Tab'){e.preventDefault();const a=e.target.selectionStart,b=e.target.selectionEnd;e.target.setRangeText('  ',a,b,'end');state.editorCode[state.activeCodeTab]=e.target.value;updateLineCount();syncCodeHighlight();renderEditorDiagnostics()}});
 $('#copyActiveCode').addEventListener('click',()=>copyText($('#codeEditor').value));
 $('#copyAllCode').addEventListener('click',()=>copyText(`<!-- HTML -->\n${state.editorCode.html}\n\n/* CSS */\n${state.editorCode.css}\n\n// JavaScript\n${state.editorCode.js}`));
 $('#downloadCode').addEventListener('click',downloadCode);
