@@ -111,3 +111,78 @@ body.dark-mode .settings-note{color:var(--muted)}
 body.dark-mode .post-card .panel,
 body.dark-mode .detail-main .panel,
 body.dark-mode .detail-side .panel{background:var(--surface);color:var(--ink)}
+
+
+/* Dark theme completion: comment thread, composer, and fixed mobile navigation. */
+body.dark-mode .comment-row,
+body.dark-mode .comment-content,
+body.dark-mode .comment-content p,
+body.dark-mode .comment-content small {
+  color: var(--ink);
+}
+body.dark-mode .comment-content p {
+  background: #202a40;
+  border: 1px solid var(--line);
+}
+body.dark-mode .comment-form,
+body.dark-mode .comment-media-preview {
+  color: var(--ink);
+}
+body.dark-mode .comment-form textarea,
+body.dark-mode .comment-form input:not([type="file"]) {
+  background: #111827;
+  color: var(--ink);
+  border-color: var(--line);
+}
+body.dark-mode .comment-form textarea::placeholder,
+body.dark-mode .comment-form input::placeholder {
+  color: var(--muted);
+}
+body.dark-mode .comment-attach {
+  background: #202a40;
+  color: var(--ink);
+  border-color: var(--line);
+}
+body.dark-mode .comment-attach:hover {
+  background: #2a3650;
+}
+body.dark-mode .comment-media-preview {
+  background: #111827;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 8px;
+}
+body.dark-mode .mobile-nav {
+  background: rgba(17, 24, 39, .96);
+  border-top-color: var(--line);
+  color: var(--ink);
+}
+body.dark-mode .mobile-nav button {
+  color: var(--muted);
+}
+body.dark-mode .mobile-nav button.active {
+  color: #c8ceff;
+}
+body.dark-mode .mobile-nav button:hover {
+  background: #202a40;
+}
+body.dark-mode .mobile-nav .mobile-create {
+  background: var(--primary);
+  color: #fff;
+}
+body.dark-mode .sidebar .nav-item {
+  color: var(--muted);
+}
+body.dark-mode .sidebar .nav-item:hover,
+body.dark-mode .sidebar .nav-item.active {
+  background: #252d50;
+  color: #c8ceff;
+}
+body.dark-mode .mobile-close,
+body.dark-mode .modal-close {
+  background: #202a40;
+  color: var(--ink);
+}
+body.dark-mode .footer-links {
+  color: var(--muted);
+}
