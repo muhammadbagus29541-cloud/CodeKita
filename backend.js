@@ -354,21 +354,35 @@
   async function addComment() {
     if(!requireUser())return;
     const input=$('#commentInput');const body=input?.value.trim();
+    const file=$('#commentMedia')?.files?.[0]||null;
     const p=getProject(state.currentProject);
-    if(!body||!p)return;
+    if(!p){toast('Proyek tidak ditemukan.');return}
+    if(!body&&!file){toast('Tulis komentar atau lampirkan gambar/GIF.');input?.focus();return}
+    if(file&&(!file.type.startsWith('image/')&&!/\.gif$/i.test(file.name))){toast('Pilih gambar atau GIF yang valid.');return}
+    if(file&&file.size>5*1024*1024){toast('Ukuran maksimum gambar/GIF adalah 5 MB.');return}
     try {
-      const {error}=await db.from('comments').insert({project_id:p.id,user_id:app.user.id,body});
+      let mediaUrl=null;
+      if(file){
+        const safeName=file.name.replace(/[^a-zA-Z0-9._-]/g,'_');
+        const path=app.user.id+'/'+p.id+'/'+crypto.randomUUID()+'-'+safeName;
+        const {error:uploadError}=await db.storage.from('comment-media').upload(path,file,{cacheControl:'3600',upsert:false,contentType:file.type||'image/gif'});
+        if(uploadError)throw uploadError;
+        mediaUrl=path;
+      }
+      const {error}=await db.from('comments').insert({project_id:p.id,user_id:app.user.id,body:body||'Lampiran',media_url:mediaUrl});
       if(error)throw error;
       input.value='';
+      const mediaInput=$('#commentMedia');if(mediaInput)mediaInput.value='';
+      const preview=$('#commentMediaPreview');if(preview){preview.hidden=true;preview.replaceChildren()}
       await loadProjects();
       renderDetail();
-      toast('Komentar dikirim.');
+      toast('Komentar berhasil dikirim.');
     } catch(error){fail(error)}
   }
   async function loadComments() {
     const p=getProject(state.currentProject);
     if(!p||!db)return;
-    const {data,error}=await db.from('comments').select('id,body,user_id,created_at,profiles!comments_user_id_fkey(id,display_name,username,bio)').eq('project_id',p.id).order('created_at',{ascending:true}).limit(200);
+    const {data,error}=await db.from('comments').select('id,body,media_url,user_id,created_at,profiles!comments_user_id_fkey(id,display_name,username,bio)').eq('project_id',p.id).order('created_at',{ascending:true}).limit(200);
     if(error){console.warn('[CodeKita] comments:',error.message);return}
     const panel=$('.detail-side .panel');
     const form=$('#commentForm');
@@ -380,15 +394,16 @@
       const e=document.createElement('p');e.className='muted';e.dataset.emptyComments='true';e.textContent='Belum ada komentar. Jadilah yang pertama berdiskusi.';panel.insertBefore(e,form);
       return;
     }
-    (data||[]).forEach(c=>{
+    for(const c of data||[]){
+      let signedMediaUrl=null;
+      if(c.media_url){const {data:signed,error:signedError}=await db.storage.from('comment-media').createSignedUrl(c.media_url,3600);if(!signedError)signedMediaUrl=signed?.signedUrl||null;}
       const person=c.profiles||{};const key=userKey(c.user_id);
       users[key]={id:c.user_id,name:person.display_name||'Pengguna',handle:'@'+(person.username||'pengguna'),initials:initials(person.display_name),color:'avatar-me',bio:person.bio||''};
       const row=document.createElement('div');row.className='comment-row';row.dataset.liveComment='true';
       const av=document.createElement('div');av.className='avatar avatar-me';av.textContent=initials(person.display_name);
       const content=document.createElement('div');content.className='comment-content';
-      const text=document.createElement('p');const strong=document.createElement('strong');strong.textContent=person.display_name||'Pengguna';text.append(strong,document.createElement('br'),document.createTextNode(c.body));
-      const small=document.createElement('small');small.textContent=timeAgo(c.created_at);content.append(text,small);row.append(av,content);panel.insertBefore(row,form);
-    });
+      const text=document.createElement('p');const strong=document.createElement('strong');strong.textContent=person.display_name||'Pengguna';text.append(strong,document.createElement('br'),document.createTextNode(c.body==='Lampiran'&&c.media_url?'':c.body));content.append(text);if(signedMediaUrl){const media=document.createElement('img');media.src=signedMediaUrl;media.alt='Lampiran komentar';media.className='comment-image';media.loading='lazy';content.append(media)}const small=document.createElement('small');small.textContent=timeAgo(c.created_at);content.append(small);row.append(av,content);panel.insertBefore(row,form);
+    }
   }
   async function saveEditorVersion() {
     if(!requireUser())return;
@@ -452,10 +467,12 @@
     const input=$('#messageInput');const body=input.value.trim();
     const target=app.selectedConversation&&app.conversationMap.get(app.selectedConversation);
     if(!target){toast('Buka profil kreator melalui detail proyek, lalu pilih Pesan.');return}
-    if(!body)return;
-    const {error}=await db.from('messages').insert({sender_id:app.user.id,recipient_id:target,body});
-    if(error){fail(error);return}
-    input.value='';await loadConversations();await loadChat(app.selectedConversation);
+    if(!body){input.focus();return}
+    try {
+      const {error}=await db.from('messages').insert({sender_id:app.user.id,recipient_id:target,body});
+      if(error)throw error;
+      input.value='';await loadConversations();await loadChat(app.selectedConversation);
+    } catch(error){fail(error)}
   }
   function mountProjectPreviews(root=document) {
     const targets = [];
