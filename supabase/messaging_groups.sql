@@ -22,12 +22,12 @@ language sql
 stable
 security definer
 set search_path = public
-as $
+as $$
   select exists (
     select 1 from public.conversation_group_members m
     where m.group_id = p_group_id and m.user_id = auth.uid()
   );
-$;
+$$;
 
 create table if not exists public.group_messages (
   id uuid primary key default gen_random_uuid(),
