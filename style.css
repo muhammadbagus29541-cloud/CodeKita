@@ -186,3 +186,36 @@ body.dark-mode .modal-close {
 body.dark-mode .footer-links {
   color: var(--muted);
 }
+
+
+/* Screenshot-driven fix: actual comment bubble is .comment-content p. */
+body.dark-mode .comment-content p {
+  background: var(--surface) !important;
+  color: var(--ink) !important;
+  border: 1px solid var(--line);
+}
+body.dark-mode .comment-content p strong {
+  color: var(--ink) !important;
+}
+body.dark-mode .comment-content small {
+  color: var(--muted) !important;
+}
+@media (max-width: 900px) {
+  body.dark-mode .mobile-nav {
+    background: #111827 !important;
+    color: #e5e7eb !important;
+    border-top: 1px solid #2b3448 !important;
+    box-shadow: 0 -8px 24px rgba(0,0,0,.18);
+  }
+  body.dark-mode .mobile-nav button,
+  body.dark-mode .mobile-nav button small {
+    color: #9ca3af !important;
+  }
+  body.dark-mode .mobile-nav button.active,
+  body.dark-mode .mobile-nav button.active small {
+    color: #c7d2fe !important;
+  }
+  body.dark-mode .mobile-nav .mobile-create {
+    color: #fff !important;
+  }
+}
