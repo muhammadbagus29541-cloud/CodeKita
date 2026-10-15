@@ -46,3 +46,6 @@
 
 .editor-diagnostics{padding:10px 14px;border-top:1px solid #29334a;background:#111827;color:#fbbf24;font:12px/1.6 "JetBrains Mono",monospace;max-height:145px;overflow:auto}
 .editor-diagnostics strong{font-weight:600}.editor-diagnostics .diagnostic-ok{color:#6ee7b7}.editor-diagnostics ul{margin:6px 0 0;padding-left:20px}.editor-diagnostics li{margin:2px 0;overflow-wrap:anywhere}
+
+.studio-toolbar-actions{display:flex;align-items:center;gap:8px}
+@media(max-width:560px){.studio-toolbar-actions{gap:5px}.studio-toolbar-actions .btn{padding:9px 10px;font-size:12px}.studio-top{gap:8px;flex-wrap:wrap}}
