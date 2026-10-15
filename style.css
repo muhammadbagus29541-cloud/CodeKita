@@ -43,3 +43,6 @@
 .code-editor-wrap #codeEditor::selection{background:#586b9b80;-webkit-text-fill-color:transparent}
 .tok-tag{color:#7dd3fc}.tok-attr{color:#c4b5fd}.tok-string{color:#a7f3d0}.tok-comment{color:#718096;font-style:italic}.tok-keyword{color:#c084fc;font-weight:600}.tok-literal{color:#f9a8d4}.tok-number{color:#fbbf24}.tok-builtin{color:#67e8f9}.tok-function{color:#fde68a}.tok-property{color:#7dd3fc}.tok-selector{color:#f0abfc}
 @media(max-width:800px){.code-editor-wrap{min-height:330px}.code-editor-wrap #codeHighlight,.code-editor-wrap #codeEditor{font-size:11px;padding:14px}}
+
+.editor-diagnostics{padding:10px 14px;border-top:1px solid #29334a;background:#111827;color:#fbbf24;font:12px/1.6 "JetBrains Mono",monospace;max-height:145px;overflow:auto}
+.editor-diagnostics strong{font-weight:600}.editor-diagnostics .diagnostic-ok{color:#6ee7b7}.editor-diagnostics ul{margin:6px 0 0;padding-left:20px}.editor-diagnostics li{margin:2px 0;overflow-wrap:anywhere}
