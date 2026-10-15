@@ -601,6 +601,24 @@
 
   document.addEventListener('click', async event => {
     const target=event.target;
+    const createGroupButton=target.closest('#newGroupButton,#newGroupIcon');
+    if(createGroupButton){event.preventDefault();event.stopImmediatePropagation();openCreateGroupDialog();return}
+    const createGroupSubmit=target.closest('#createGroupSubmit');
+    if(createGroupSubmit){event.preventDefault();event.stopImmediatePropagation();await createGroup();return}
+    const chatProfile=target.closest('#chatProfile');
+    if(chatProfile){
+      event.preventDefault();event.stopImmediatePropagation();
+      const key=app.selectedConversation;const person=users[key]||{};
+      if(!key){toast('Pilih kontak terlebih dahulu.');return}
+      if(app.groupConversationMap.has(key)){
+        const groupId=app.groupConversationMap.get(key);
+        const {data}=await db.from('conversation_group_members').select('user_id,role').eq('group_id',groupId);
+        showModal('Profil grup','<p><strong>'+escapeHtml(person.name||'Grup')+'</strong></p><p>'+((data||[]).length)+' anggota</p><p class="muted">Grup CodeKita</p>','Tutup',()=>true);
+      } else {
+        showModal('Profil kontak','<p><strong>'+escapeHtml(person.name||'Pengguna')+'</strong></p><p>'+escapeHtml(person.handle||'')+'</p><p>'+escapeHtml(person.bio||'')+'</p>','Tutup',()=>true);
+      }
+      return;
+    }
     const notification=target.closest('[data-notification-id]');
     if(notification){
       event.preventDefault();event.stopImmediatePropagation();
