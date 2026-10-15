@@ -196,7 +196,7 @@
       const actorKey = n.actor_id ? userKey(n.actor_id) : null;
       if (n.actor) users[actorKey] = {id:n.actor.id,name:n.actor.display_name,handle:'@'+n.actor.username,initials:initials(n.actor.display_name),color:'avatar-me',bio:n.actor.bio||''};
       const templates = { like:'menyukai proyekmu', comment:'mengomentari proyekmu', follow:'mulai mengikutimu', repost:'membagikan ulang proyekmu', message:'mengirimimu pesan', system:'aktivitas sistem' };
-      notifications.push({id:n.id,type:n.type,user:actorKey,text:templates[n.type]||'melakukan aktivitas',project:n.projects?.title||'',time:timeAgo(n.created_at),unread:!n.is_read});
+      notifications.push({id:n.id,type:n.type,user:actorKey,projectId:n.project_id||null,commentId:n.comment_id||null,text:templates[n.type]||'melakukan aktivitas',project:n.projects?.title||'',time:timeAgo(n.created_at),unread:!n.is_read});
     });
     renderNotifications();
   }
@@ -528,6 +528,31 @@
 
   document.addEventListener('click', async event => {
     const target=event.target;
+    const notification=target.closest('[data-notification-id]');
+    if(notification){
+      event.preventDefault();event.stopImmediatePropagation();
+      const notificationId=notification.dataset.notificationId;
+      const notificationType=notification.dataset.notificationType;
+      const projectId=notification.dataset.notificationProject;
+      const actorKey=notification.dataset.notificationUser;
+      try {
+        if(notificationId&&app.user){
+          const {error}=await db.from('notifications').update({is_read:true}).eq('id',notificationId).eq('recipient_id',app.user.id);
+          if(error)console.warn('[CodeKita] Tidak dapat menandai notifikasi dibaca:',error.message);
+        }
+      } catch(error){console.warn('[CodeKita] Notification read update failed:',error.message)}
+      if(projectId){
+        state.currentProject=projectId;
+        go('detail');
+      } else if(notificationType==='message'&&actorKey){
+        go('messages');
+        await loadChat(actorKey);
+      } else if(actorKey){
+        go('profile');
+      }
+      await loadNotifications();
+      return;
+    }
     const auth=target.closest('#authButton');
     if(auth){event.preventDefault();event.stopImmediatePropagation();if(app.user){const {error}=await db.auth.signOut();if(error)fail(error);else toast('Kamu sudah keluar.')}else openAuth('signin');return}
     const shortcut=target.closest('#profileShortcut');
