@@ -85,8 +85,11 @@ create table if not exists public.comments (
   project_id uuid not null references public.projects(id) on delete cascade,
   user_id uuid not null references public.profiles(id) on delete cascade,
   body text not null check (char_length(body) between 1 and 2000),
+  media_url text,
   created_at timestamptz not null default now()
 );
+
+alter table public.comments add column if not exists media_url text;
 
 create index if not exists comments_project_created_idx on public.comments(project_id, created_at asc);
 
