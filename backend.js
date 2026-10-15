@@ -293,7 +293,7 @@
       await db.from('messages').update({read_at:new Date().toISOString()}).eq('recipient_id',app.user.id).eq('sender_id',otherId).is('read_at',null);
     }
     wrap.scrollTop=wrap.scrollHeight;
-    $('.conversation-item').forEach(el=>el.classList.toggle('active',el.dataset.conversation===key));
+    $$('.conversation-item').forEach(el=>el.classList.toggle('active',el.dataset.conversation===key));
   }
   async function loadProfileCounts(){
     if(!app.user||!db){$('#profileFollowerCount').textContent='0';$('#profileFollowingCount').textContent='0';return;}
