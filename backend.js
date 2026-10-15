@@ -355,7 +355,8 @@
     if(!requireUser())return;
     const input=$('#commentInput');const body=input?.value.trim();
     const p=getProject(state.currentProject);
-    if(!body||!p)return;
+    if(!p){toast('Proyek tidak ditemukan.');return}
+    if(!body){toast('Tulis komentar sebelum mengirim.');input?.focus();return}
     try {
       const {error}=await db.from('comments').insert({project_id:p.id,user_id:app.user.id,body});
       if(error)throw error;
@@ -452,10 +453,12 @@
     const input=$('#messageInput');const body=input.value.trim();
     const target=app.selectedConversation&&app.conversationMap.get(app.selectedConversation);
     if(!target){toast('Buka profil kreator melalui detail proyek, lalu pilih Pesan.');return}
-    if(!body)return;
-    const {error}=await db.from('messages').insert({sender_id:app.user.id,recipient_id:target,body});
-    if(error){fail(error);return}
-    input.value='';await loadConversations();await loadChat(app.selectedConversation);
+    if(!body){input.focus();return}
+    try {
+      const {error}=await db.from('messages').insert({sender_id:app.user.id,recipient_id:target,body});
+      if(error)throw error;
+      input.value='';await loadConversations();await loadChat(app.selectedConversation);
+    } catch(error){fail(error)}
   }
   function mountProjectPreviews(root=document) {
     const targets = [];
