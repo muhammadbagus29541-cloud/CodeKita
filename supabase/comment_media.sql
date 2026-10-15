@@ -7,7 +7,7 @@ insert into storage.buckets (id, name, public, file_size_limit, allowed_mime_typ
 values (
   'comment-media',
   'comment-media',
-  true,
+  false,
   5242880,
   array['image/jpeg','image/png','image/gif','image/webp','image/avif']
 )
@@ -16,10 +16,18 @@ on conflict (id) do update set
   file_size_limit = excluded.file_size_limit,
   allowed_mime_types = excluded.allowed_mime_types;
 
-drop policy if exists "CodeKita comment media public read" on storage.objects;
-create policy "CodeKita comment media public read"
-on storage.objects for select
-using (bucket_id = 'comment-media');
+drop policy if exists "CodeKita comment media authorized read" on storage.objects;
+create policy "CodeKita comment media authorized read"
+on storage.objects for select to authenticated
+using (
+  bucket_id = 'comment-media'
+  and exists (
+    select 1
+    from public.projects p
+    where p.id::text = (storage.foldername(name))[2]
+      and ((p.status = 'published' and p.visibility = 'public') or p.user_id = auth.uid())
+  )
+);
 
 drop policy if exists "CodeKita comment media owner upload" on storage.objects;
 create policy "CodeKita comment media owner upload"
