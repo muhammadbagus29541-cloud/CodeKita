@@ -525,11 +525,16 @@
     if(!name||name.length<2){toast('Nama grup minimal 2 karakter.');return}
     const selected=$('[data-group-member]:checked').map(el=>el.value).filter(id=>id&&id!==app.user.id);
     try {
+      const submit=$('#createGroupSubmit');
+      if(submit){submit.disabled=true;submit.textContent='Membuat grup...'}
       const {data:group,error}=await db.from('conversation_groups').insert({name,created_by:app.user.id}).select('id,name,created_at').single();
       if(error)throw error;
       const members=[{group_id:group.id,user_id:app.user.id,role:'owner'},...selected.map(user_id=>({group_id:group.id,user_id,role:'member'}))];
       const {error:membersError}=await db.from('conversation_group_members').insert(members);
-      if(membersError)throw membersError;
+      if(membersError){
+        await db.from('conversation_groups').delete().eq('id',group.id).eq('created_by',app.user.id);
+        throw membersError;
+      }
       $('#modal').close();
       await loadConversations();
       const key='group_'+group.id;
@@ -539,7 +544,7 @@
       if(!conversations.some(c=>c.user===key))conversations.unshift({user:key,last:'Grup dibuat',time:'baru',active:true});
       renderConversations();go('messages');await loadChat(key);
       toast('Grup berhasil dibuat.');
-    } catch(error){fail(error)}
+    } catch(error){console.error('[CodeKita] Gagal membuat grup:',error);toast('Grup gagal dibuat: '+(error?.message||error?.details||'periksa tabel dan kebijakan RLS Supabase'));const submit=$('#createGroupSubmit');if(submit){submit.disabled=false;submit.textContent='Buat grup'}}
   }
   function openCreateGroupDialog(){
     if(!requireUser())return;
