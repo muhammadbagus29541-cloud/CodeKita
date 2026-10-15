@@ -21,7 +21,8 @@
   };
   const fail = error => {
     console.error('[CodeKita]', error);
-    toast(error?.message || 'Permintaan gagal. Coba kembali.');
+    const message = error?.message || error?.error_description || error?.details || 'Permintaan gagal. Coba kembali.';
+    toast(String(message).slice(0,180));
   };
   const requireUser = () => {
     if (!app.user) { openAuth('signin'); return false; }
