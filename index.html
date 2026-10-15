@@ -15,7 +15,7 @@
   <div class="app-shell">
     <aside class="sidebar">
       <a class="brand" href="#" data-page="home"><span class="brand-mark">&lt;/&gt;</span><span>CodeKita</span></a>
-      <button class="mobile-close" id="closeNav" aria-label="Tutup menu">×</button>
+      
       <nav class="main-nav" aria-label="Navigasi utama">
         <button class="nav-item active" data-page="home"><span>⌂</span>Beranda</button>
         <button class="nav-item" data-page="explore"><span>⌕</span>Jelajahi</button>
@@ -117,7 +117,7 @@
 
   <nav class="mobile-nav" aria-label="Navigasi mobile"><button class="active" data-page="home"><span>⌂</span><small>Beranda</small></button><button data-page="explore"><span>⌕</span><small>Jelajahi</small></button><button data-page="create"><span class="mobile-create">＋</span><small>Buat</small></button><button data-page="saved"><span>▣</span><small>Tersimpan</small></button><button data-page="profile"><span>◉</span><small>Profil</small></button></nav>
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
-  <dialog id="modal"><form method="dialog" class="modal-card"><button type="button" class="modal-close" aria-label="Tutup" onclick="document.getElementById(\'modal\').close()">×</button><div id="modalContent"></div></form></dialog>
+  <dialog id="modal"><form method="dialog" class="modal-card"><div id="modalContent"></div></form></dialog>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="supabase-config.js"></script>
   <script src="app.js"></script>
