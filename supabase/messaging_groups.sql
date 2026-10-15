@@ -46,7 +46,7 @@ alter table public.group_messages enable row level security;
 
 drop policy if exists conversation_groups_read_member on public.conversation_groups;
 create policy conversation_groups_read_member on public.conversation_groups for select
-using (public.is_conversation_group_member(id));
+using (created_by = auth.uid() or public.is_conversation_group_member(id));
 
 drop policy if exists conversation_groups_create_owner on public.conversation_groups;
 create policy conversation_groups_create_owner on public.conversation_groups for insert
