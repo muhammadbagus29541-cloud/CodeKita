@@ -503,14 +503,49 @@
   async function sendMessage() {
     if(!requireUser())return;
     const input=$('#messageInput');const body=input.value.trim();
-    const target=app.selectedConversation&&app.conversationMap.get(app.selectedConversation);
-    if(!target){toast('Buka profil kreator melalui detail proyek, lalu pilih Pesan.');return}
+    const key=app.selectedConversation;
+    if(!key){toast('Pilih kontak atau grup terlebih dahulu.');return}
     if(!body){input.focus();return}
     try {
-      const {error}=await db.from('messages').insert({sender_id:app.user.id,recipient_id:target,body});
-      if(error)throw error;
-      input.value='';await loadConversations();await loadChat(app.selectedConversation);
+      if(app.groupConversationMap.has(key)){
+        const {error}=await db.from('group_messages').insert({group_id:app.groupConversationMap.get(key),sender_id:app.user.id,body});
+        if(error)throw error;
+      } else {
+        const target=app.conversationMap.get(key);
+        if(!target){toast('Percakapan ini tidak tersedia.');return}
+        const {error}=await db.from('messages').insert({sender_id:app.user.id,recipient_id:target,body});
+        if(error)throw error;
+      }
+      input.value='';await loadConversations();await loadChat(key);
     } catch(error){fail(error)}
+  }
+  async function createGroup() {
+    if(!requireUser())return;
+    const name=$('#newGroupName')?.value.trim();
+    if(!name||name.length<2){toast('Nama grup minimal 2 karakter.');return}
+    const selected=$('[data-group-member]:checked').map(el=>el.value).filter(id=>id&&id!==app.user.id);
+    try {
+      const {data:group,error}=await db.from('conversation_groups').insert({name,created_by:app.user.id}).select('id,name,created_at').single();
+      if(error)throw error;
+      const members=[{group_id:group.id,user_id:app.user.id,role:'owner'},...selected.map(user_id=>({group_id:group.id,user_id,role:'member'}))];
+      const {error:membersError}=await db.from('conversation_group_members').insert(members);
+      if(membersError)throw membersError;
+      $('#modal').close();
+      await loadConversations();
+      const key='group_'+group.id;
+      app.groupConversationMap.set(key,group.id);
+      users[key]={name:group.name,handle:'Grup CodeKita',initials:initials(group.name),color:'avatar-me',bio:'Grup CodeKita'};
+      app.selectedConversation=key;
+      if(!conversations.some(c=>c.user===key))conversations.unshift({user:key,last:'Grup dibuat',time:'baru',active:true});
+      renderConversations();go('messages');await loadChat(key);
+      toast('Grup berhasil dibuat.');
+    } catch(error){fail(error)}
+  }
+  function openCreateGroupDialog(){
+    if(!requireUser())return;
+    const contacts=conversations.filter(c=>!String(c.user).startsWith('group_')&&users[c.user]?.id&&users[c.user].id!==app.user.id);
+    const options=contacts.map(c=>'<label class="group-member-option"><input type="checkbox" data-group-member value="'+escapeHtml(users[c.user].id)+'"><span>'+escapeHtml(users[c.user].name||'Pengguna')+'</span></label>').join('');
+    showModal('Buat grup','<label class="field"><span>Nama grup</span><input id="newGroupName" maxlength="80" placeholder="Contoh: Tim CodeKita" required></label><p class="muted">Pilih kontak yang ingin ditambahkan.</p><div class="group-member-picker">'+(options||'<p class="muted">Belum ada kontak yang dapat ditambahkan. Mulai percakapan pribadi terlebih dahulu.</p>')+'</div><button class="btn btn-primary btn-block" id="createGroupSubmit" type="button">Buat grup</button>','Tutup',()=>true);
   }
   function mountProjectPreviews(root=document) {
     const targets = [];
