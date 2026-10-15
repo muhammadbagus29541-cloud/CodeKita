@@ -545,7 +545,11 @@
         state.currentProject=projectId;
         go('detail');
       } else if(notificationType==='message'&&actorKey){
+        const actorId=users[actorKey]?.id;
+        if(actorId&&actorId!==app.user?.id)app.conversationMap.set(actorKey,actorId);
         go('messages');
+        if(actorId&&actorId!==app.user?.id&&!conversations.some(c=>c.user===actorKey))conversations.unshift({user:actorKey,last:'Notifikasi pesan',time:'baru',active:true});
+        renderConversations();
         await loadChat(actorKey);
       } else if(actorKey){
         go('profile');
