@@ -1,6 +1,19 @@
 -- CodeKita group messaging migration
 -- Run this file once in Supabase SQL Editor after the existing schema.sql.
 
+create or replace function public.is_conversation_group_member(p_group_id uuid)
+returns boolean
+language sql
+stable
+security definer
+set search_path = public
+as $
+  select exists (
+    select 1 from public.conversation_group_members m
+    where m.group_id = p_group_id and m.user_id = auth.uid()
+  );
+$;
+
 create table if not exists public.conversation_groups (
   id uuid primary key default gen_random_uuid(),
   name text not null check (char_length(trim(name)) between 2 and 80),
@@ -33,7 +46,7 @@ alter table public.group_messages enable row level security;
 
 drop policy if exists conversation_groups_read_member on public.conversation_groups;
 create policy conversation_groups_read_member on public.conversation_groups for select
-using (exists (select 1 from public.conversation_group_members m where m.group_id = id and m.user_id = auth.uid()));
+using (public.is_conversation_group_member(id));
 
 drop policy if exists conversation_groups_create_owner on public.conversation_groups;
 create policy conversation_groups_create_owner on public.conversation_groups for insert
@@ -45,7 +58,7 @@ using (created_by = auth.uid()) with check (created_by = auth.uid());
 
 drop policy if exists conversation_group_members_read_member on public.conversation_group_members;
 create policy conversation_group_members_read_member on public.conversation_group_members for select
-using (exists (select 1 from public.conversation_group_members mine where mine.group_id = group_id and mine.user_id = auth.uid()));
+using (user_id = auth.uid() or public.is_conversation_group_member(group_id));
 
 drop policy if exists conversation_group_members_insert_owner on public.conversation_group_members;
 create policy conversation_group_members_insert_owner on public.conversation_group_members for insert
@@ -60,11 +73,11 @@ using (user_id = auth.uid() or exists (select 1 from public.conversation_groups 
 
 drop policy if exists group_messages_read_member on public.group_messages;
 create policy group_messages_read_member on public.group_messages for select
-using (exists (select 1 from public.conversation_group_members m where m.group_id = group_id and m.user_id = auth.uid()));
+using (public.is_conversation_group_member(group_id));
 
 drop policy if exists group_messages_insert_member on public.group_messages;
 create policy group_messages_insert_member on public.group_messages for insert
-with check (sender_id = auth.uid() and exists (select 1 from public.conversation_group_members m where m.group_id = group_id and m.user_id = auth.uid()));
+with check (sender_id = auth.uid() and public.is_conversation_group_member(group_id));
 
 do $$
 begin
