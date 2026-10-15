@@ -457,6 +457,44 @@
     if(error){fail(error);return}
     input.value='';await loadConversations();await loadChat(app.selectedConversation);
   }
+  function mountProjectPreviews(root=document) {
+    const targets = [];
+    $$('.post-card [data-open-project] .project-preview', root).forEach(el => {
+      const card = el.closest('.post-card');
+      targets.push({ host: el.parentElement, id: card?.dataset.project });
+    });
+    $$('.project-card', root).forEach(card => {
+      const preview = card.querySelector(':scope > .project-preview');
+      if (preview) targets.push({ host: preview.parentElement, id: card.dataset.openProject });
+    });
+    const detail = $('.detail-preview-wrap', root);
+    if (detail && state.currentProject) targets.push({ host: detail, id: state.currentProject, detail: true });
+    const seen = new Set();
+    targets.forEach(({host,id,detail}) => {
+      if (!host || !id || seen.has(host)) return;
+      seen.add(host);
+      const project = getProject(id);
+      if (!project) return;
+      const code = project.code || {};
+      if (!String(code.html || '').trim() && !String(code.css || '').trim() && !String(code.js || '').trim()) {
+        host.innerHTML = '<div class="preview-placeholder"><strong>Preview belum tersedia</strong><p>Proyek ini belum memiliki kode HTML, CSS, atau JavaScript.</p></div>';
+        return;
+      }
+      const html = String(code.html || '').replace(/<\/script/gi, '<\\/script');
+      const css = String(code.css || '').replace(/<\/style/gi, '<\\/style');
+      const js = String(code.js || '').replace(/<\/script/gi, '<\\/script');
+      const srcdoc = '<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><style>html,body{margin:0;min-height:100%;}body{font-family:Arial,sans-serif;padding:12px;box-sizing:border-box;}'+css+'</style></head><body>'+html+'<script>try{'+js+'}catch(e){document.body.insertAdjacentHTML("beforeend","<pre>Preview error: script gagal dijalankan.</pre>")}<\/script></body></html>';
+      const frame = document.createElement('iframe');
+      frame.setAttribute('sandbox','allow-scripts');
+      frame.setAttribute('title','Preview proyek '+(project.title || 'CodeKita'));
+      frame.setAttribute('loading','lazy');
+      frame.style.cssText = 'display:block;width:100%;height:100%;min-height:'+(detail?'420px':'230px')+';border:0;background:#fff;';
+      host.innerHTML = '';
+      host.style.cssText += ';overflow:hidden;min-height:'+(detail?'420px':'230px')+';background:#fff;';
+      host.appendChild(frame);
+      frame.srcdoc = srcdoc;
+    });
+  }
   function overrideProfileRender() {
     const list=state.profileTab==='saved'?[...projects,...userProjects].filter(p=>state.saved.has(p.id)):state.profileTab==='reposts'?[...projects,...userProjects].filter(p=>app.reposted?.has(p.id)):state.profileTab==='collections'?[]:userProjects;
     $('#profileGrid').innerHTML=list.filter(p=>p.status==='published'||p.userId===app.user?.id).map(projectCard).join('')||'<div class="empty-state"><strong>Belum ada proyek di sini.</strong> Buat proyek atau simpan referensi untuk mengisinya.</div>';
@@ -464,8 +502,11 @@
     $('#profileFollowerCount').textContent='0';$('#profileFollowingCount').textContent=String(state.followed.size);
   }
   // The UI's data arrays now represent actual database records, never seeded sample accounts.
-  renderProfile = overrideProfileRender;
-  renderDetail = ((base) => function(){base(); if(state.page==='detail'){const p=getProject(state.currentProject);const head=$('#detailContent .detail-project-info .post-head');if(head&&app.user&&p&&p.userId!==app.user.id&&!head.querySelector('[data-message-user]')){const btn=document.createElement('button');btn.className='btn btn-secondary';btn.type='button';btn.dataset.messageUser=p.user;btn.textContent='Pesan';head.appendChild(btn);}if(app.user)loadComments();}})(renderDetail);
+  renderProfile = function(){ overrideProfileRender(); mountProjectPreviews($('#profileGrid')); };
+  renderFeed = ((base) => function(){base();mountProjectPreviews($('#feedPosts'));})(renderFeed);
+  renderExplore = ((base) => function(){base();mountProjectPreviews($('#exploreGrid'));})(renderExplore);
+  renderSaved = ((base) => function(){base();mountProjectPreviews($('#savedGrid'));})(renderSaved);
+  renderDetail = ((base) => function(){base(); if(state.page==='detail'){mountProjectPreviews($('#detailContent'));const p=getProject(state.currentProject);const head=$('#detailContent .detail-project-info .post-head');if(head&&app.user&&p&&p.userId!==app.user.id&&!head.querySelector('[data-message-user]')){const btn=document.createElement('button');btn.className='btn btn-secondary';btn.type='button';btn.dataset.messageUser=p.user;btn.textContent='Pesan';head.appendChild(btn);}if(app.user)loadComments();}})(renderDetail);
   window.CodeKita = { get backendReady(){return Boolean(db)}, get authenticated(){return Boolean(app.user)}, openAuth, refresh:refreshAll };
 
   document.addEventListener('click', async event => {
