@@ -270,3 +270,60 @@ body.dark-mode .notification-dot {
     font-size: 19px;
   }
 }
+
+
+/* WhatsApp-style messaging layout: contact list on the left, chat on the right. */
+.messages-page{max-width:1600px}
+.messages-heading{display:flex;align-items:center;justify-content:space-between;gap:16px;margin-bottom:20px}
+.messages-heading h1{margin-bottom:6px}
+.messages-heading .muted{margin:0}
+.messages-layout{display:grid;grid-template-columns:minmax(260px,340px) minmax(0,1fr);padding:0;min-height:min(720px,calc(100vh - 210px));height:calc(100vh - 210px);max-height:900px;overflow:hidden}
+.conversation-list{min-width:0;overflow-y:auto;border-right:1px solid var(--line);padding:14px}
+.conversation-tools{display:flex;align-items:center;gap:7px;margin-bottom:10px}
+.conversation-tools .searchbox{flex:1;min-width:0;margin:0}
+.new-group-icon{flex:0 0 38px;width:38px;height:38px;border:1px solid var(--line);background:var(--surface);border-radius:10px}
+.conversation-item{display:flex;width:100%;align-items:center;gap:10px;padding:12px 9px;border:0;background:transparent;color:var(--ink);text-align:left;border-radius:12px}
+.conversation-item>div:not(.avatar){flex:1;min-width:0}
+.conversation-item strong{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:12px}
+.conversation-item small{display:block;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:10px;color:var(--muted);margin-top:4px}
+.conversation-item>small:last-child{flex:0 0 auto;max-width:72px;text-align:right}
+.conversation-view{display:flex;flex-direction:column;min-width:0;min-height:0;background:var(--surface)}
+.conversation-header{min-height:70px;flex:0 0 auto}
+.chat-back{display:inline-flex;align-items:center;justify-content:center;width:36px;height:36px;border-radius:10px;border:0;background:transparent;color:var(--ink);font-size:22px}
+.chat-back:hover,.chat-profile-btn:hover{background:var(--primary-soft);color:var(--primary)}
+.chat-profile-btn{margin-left:auto;display:inline-flex;align-items:center;gap:7px;padding:8px 11px;border:1px solid var(--line);border-radius:10px;background:var(--surface);color:var(--ink);font-size:12px;font-weight:700}
+.chat-profile-btn span:first-child{font-size:17px}
+.chat-messages{overflow-y:auto;min-height:0;background:var(--bg)}
+.message-composer{flex:0 0 auto;background:var(--surface)}
+.message-composer input{background:var(--bg);color:var(--ink)}
+.group-sender{display:block;font-size:10px;font-weight:700;color:var(--primary);margin-bottom:4px}
+.group-member-picker{display:grid;gap:8px;max-height:230px;overflow:auto;border:1px solid var(--line);border-radius:10px;padding:10px}
+.group-member-option{display:flex;align-items:center;gap:10px;padding:8px;border-radius:8px;background:var(--bg);font-size:12px}
+.group-member-option input{accent-color:var(--primary)}
+body.dark-mode .conversation-item{color:var(--ink)}
+body.dark-mode .conversation-item:hover,body.dark-mode .conversation-item.active{background:#252d50}
+body.dark-mode .conversation-view,body.dark-mode .conversation-header,body.dark-mode .message-composer{background:var(--surface);color:var(--ink)}
+body.dark-mode .chat-messages{background:var(--bg)}
+body.dark-mode .chat-bubble.received{background:#252d42;color:var(--ink)}
+body.dark-mode .new-group-icon,body.dark-mode .chat-profile-btn{background:var(--surface);color:var(--ink);border-color:var(--line)}
+@media(max-width:800px){
+  .messages-page{padding:16px 10px 82px}
+  .messages-heading{margin:0 4px 14px;align-items:center}
+  .messages-heading h1{font-size:22px}
+  .messages-heading .eyebrow{margin-bottom:5px}
+  .messages-heading .muted{font-size:11px}
+  .messages-heading #newGroupButton{padding:10px 11px;font-size:11px}
+  .messages-layout{display:block;height:calc(100dvh - 165px);min-height:420px;max-height:none;overflow:hidden;border-radius:14px}
+  .conversation-list{display:block;height:100%;border-right:0;border-bottom:0;padding:10px;overflow-y:auto}
+  .conversation-item{display:flex}
+  .conversation-item.active{display:flex}
+  .conversation-view{display:none;min-height:0;height:100%}
+  .chat-active .conversation-list{display:none}
+  .chat-active .conversation-view{display:flex;position:fixed;z-index:50;inset:0;width:100%;height:100dvh;min-height:0;padding-top:env(safe-area-inset-top);padding-bottom:env(safe-area-inset-bottom);border-radius:0;overflow:hidden}
+  .chat-active .conversation-header{min-height:62px;padding:9px 12px}
+  .chat-active .chat-messages{flex:1;min-height:0;padding:14px;overflow-y:auto}
+  .chat-active .message-composer{padding:10px;gap:7px}
+  .chat-active .message-composer input{font-size:16px}
+  .chat-profile-btn{padding:8px;font-size:11px}
+  .chat-back{display:inline-flex}
+}

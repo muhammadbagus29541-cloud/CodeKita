@@ -9,7 +9,7 @@
     !String(config.supabaseAnonKey).startsWith('YOUR_')
   );
   const db = configured ? window.supabase.createClient(config.supabaseUrl, config.supabaseAnonKey) : null;
-  const app = { db, user: null, profile: null, ready: false, selectedConversation: null, collectionRows: [], conversationMap: new Map(), channel: null, refreshTimer: null };
+  const app = { db, user: null, profile: null, ready: false, selectedConversation: null, collectionRows: [], conversationMap: new Map(), groupConversationMap: new Map(), channel: null, refreshTimer: null };
   const userKey = id => 'db_' + id;
   const initials = name => String(name || 'CK').trim().split(/\s+/).slice(0, 2).map(part => part[0] || '').join('').toUpperCase() || 'CK';
   const timeAgo = value => {
@@ -219,6 +219,7 @@
   async function loadConversations() {
     conversations.splice(0, conversations.length);
     app.conversationMap.clear();
+    app.groupConversationMap.clear();
     if (!app.user) { renderConversations(); return; }
     const { data, error } = await db.from('messages').select('id,sender_id,recipient_id,body,created_at,read_at').or('sender_id.eq.'+app.user.id+',recipient_id.eq.'+app.user.id).order('created_at',{ascending:false}).limit(500);
     if (error) throw error;
@@ -238,24 +239,61 @@
       app.conversationMap.set(key,other);
       conversations.push({user:key,last:m.body,time:timeAgo(m.created_at),active:app.selectedConversation===key});
     }
+    try {
+      const {data: memberships,error: groupError}=await db.from('conversation_group_members').select('group_id,role,groups:conversation_groups(id,name,created_at)').eq('user_id',app.user.id);
+      if(groupError)throw groupError;
+      const groupIds=(memberships||[]).map(m=>m.group_id);
+      if(groupIds.length){
+        const {data: groupMessages,error: messageError}=await db.from('group_messages').select('group_id,body,created_at').in('group_id',groupIds).order('created_at',{ascending:false}).limit(500);
+        if(messageError)throw messageError;
+        const latestGroupMessage=new Map();
+        (groupMessages||[]).forEach(m=>{if(!latestGroupMessage.has(m.group_id))latestGroupMessage.set(m.group_id,m)});
+        (memberships||[]).forEach(m=>{
+          const g=m.groups;if(!g)return;
+          const key='group_'+g.id;app.groupConversationMap.set(key,g.id);
+          users[key]={name:g.name,handle:'Grup · '+(latestGroupMessage.has(g.id)?'percakapan':'grup'),initials:initials(g.name),color:'avatar-me',bio:'Grup CodeKita'};
+          const latest=latestGroupMessage.get(g.id);
+          conversations.push({user:key,last:latest?.body||'Grup dibuat',time:latest?timeAgo(latest.created_at):timeAgo(g.created_at),active:app.selectedConversation===key});
+        });
+      }
+    } catch(groupError) {
+      console.warn('[CodeKita] Grup belum tersedia. Jalankan supabase/messaging_groups.sql:',groupError.message);
+    }
     renderConversations();
     if (app.selectedConversation) await loadChat(app.selectedConversation);
   }
   async function loadChat(key) {
-    if (!app.user || !app.conversationMap.has(key)) return;
+    if (!app.user) return;
     app.selectedConversation=key;
-    const otherId=app.conversationMap.get(key);
-    const {data,error}=await db.from('messages').select('*').or('and(sender_id.eq.'+app.user.id+',recipient_id.eq.'+otherId+'),and(sender_id.eq.'+otherId+',recipient_id.eq.'+app.user.id+')').order('created_at',{ascending:true}).limit(300);
-    if(error){fail(error);return}
     const wrap=$('#chatMessages'); if(!wrap)return;
+    const headerUser=users[key]||{};
+    $('#chatAvatar').textContent=(headerUser.name||'P').slice(0,1).toUpperCase();
+    $('#chatPersonName').textContent=headerUser.name||'Pengguna';
+    $('#chatPersonHandle').textContent=app.groupConversationMap.has(key)?'Grup CodeKita':(headerUser.handle||'Pesan pribadi');
+    $('#page-messages').classList.add('chat-active');
     wrap.innerHTML='';
-    if(!(data||[]).length){const empty=document.createElement('div');empty.className='empty-state';empty.textContent='Belum ada pesan. Kirim pesan pertama untuk memulai percakapan.';wrap.appendChild(empty);}
-    (data||[]).forEach(m=>{
-      const b=document.createElement('div');b.className='chat-bubble '+(m.sender_id===app.user.id?'sent':'received');b.textContent=m.body;wrap.appendChild(b);
-    });
+    if(app.groupConversationMap.has(key)){
+      const groupId=app.groupConversationMap.get(key);
+      const {data,error}=await db.from('group_messages').select('id,sender_id,body,created_at').eq('group_id',groupId).order('created_at',{ascending:true}).limit(500);
+      if(error){fail(error);return}
+      const senderIds=[...new Set((data||[]).map(m=>m.sender_id).filter(id=>id!==app.user.id))];
+      if(senderIds.length){
+        const {data: people}=await db.from('profiles').select('id,display_name,username').in('id',senderIds);
+        (people||[]).forEach(p=>{users[userKey(p.id)]={id:p.id,name:p.display_name||'Pengguna',handle:'@'+(p.username||'pengguna'),initials:initials(p.display_name),color:'avatar-me'}});
+      }
+      if(!(data||[]).length){const empty=document.createElement('div');empty.className='empty-state';empty.textContent='Grup dibuat. Kirim pesan pertama.';wrap.appendChild(empty);}
+      (data||[]).forEach(m=>{const bubble=document.createElement('div');bubble.className='chat-bubble '+(m.sender_id===app.user.id?'sent':'received');if(m.sender_id!==app.user.id){const label=document.createElement('small');label.className='group-sender';label.textContent=users[userKey(m.sender_id)]?.name||'Anggota';bubble.appendChild(label)}const body=document.createElement('div');body.textContent=m.body;bubble.appendChild(body);wrap.appendChild(bubble)});
+    } else {
+      if(!app.conversationMap.has(key))return;
+      const otherId=app.conversationMap.get(key);
+      const {data,error}=await db.from('messages').select('*').or('and(sender_id.eq.'+app.user.id+',recipient_id.eq.'+otherId+'),and(sender_id.eq.'+otherId+',recipient_id.eq.'+app.user.id+')').order('created_at',{ascending:true}).limit(300);
+      if(error){fail(error);return}
+      if(!(data||[]).length){const empty=document.createElement('div');empty.className='empty-state';empty.textContent='Belum ada pesan. Kirim pesan pertama untuk memulai percakapan.';wrap.appendChild(empty);}
+      (data||[]).forEach(m=>{const bubble=document.createElement('div');bubble.className='chat-bubble '+(m.sender_id===app.user.id?'sent':'received');bubble.textContent=m.body;wrap.appendChild(bubble)});
+      await db.from('messages').update({read_at:new Date().toISOString()}).eq('recipient_id',app.user.id).eq('sender_id',otherId).is('read_at',null);
+    }
     wrap.scrollTop=wrap.scrollHeight;
-    await db.from('messages').update({read_at:new Date().toISOString()}).eq('recipient_id',app.user.id).eq('sender_id',otherId).is('read_at',null);
-    $$('.conversation-item').forEach(el=>el.classList.toggle('active',el.dataset.conversation===key));
+    $('.conversation-item').forEach(el=>el.classList.toggle('active',el.dataset.conversation===key));
   }
   async function loadProfileCounts(){
     if(!app.user||!db){$('#profileFollowerCount').textContent='0';$('#profileFollowingCount').textContent='0';return;}
@@ -465,14 +503,49 @@
   async function sendMessage() {
     if(!requireUser())return;
     const input=$('#messageInput');const body=input.value.trim();
-    const target=app.selectedConversation&&app.conversationMap.get(app.selectedConversation);
-    if(!target){toast('Buka profil kreator melalui detail proyek, lalu pilih Pesan.');return}
+    const key=app.selectedConversation;
+    if(!key){toast('Pilih kontak atau grup terlebih dahulu.');return}
     if(!body){input.focus();return}
     try {
-      const {error}=await db.from('messages').insert({sender_id:app.user.id,recipient_id:target,body});
-      if(error)throw error;
-      input.value='';await loadConversations();await loadChat(app.selectedConversation);
+      if(app.groupConversationMap.has(key)){
+        const {error}=await db.from('group_messages').insert({group_id:app.groupConversationMap.get(key),sender_id:app.user.id,body});
+        if(error)throw error;
+      } else {
+        const target=app.conversationMap.get(key);
+        if(!target){toast('Percakapan ini tidak tersedia.');return}
+        const {error}=await db.from('messages').insert({sender_id:app.user.id,recipient_id:target,body});
+        if(error)throw error;
+      }
+      input.value='';await loadConversations();await loadChat(key);
     } catch(error){fail(error)}
+  }
+  async function createGroup() {
+    if(!requireUser())return;
+    const name=$('#newGroupName')?.value.trim();
+    if(!name||name.length<2){toast('Nama grup minimal 2 karakter.');return}
+    const selected=$('[data-group-member]:checked').map(el=>el.value).filter(id=>id&&id!==app.user.id);
+    try {
+      const {data:group,error}=await db.from('conversation_groups').insert({name,created_by:app.user.id}).select('id,name,created_at').single();
+      if(error)throw error;
+      const members=[{group_id:group.id,user_id:app.user.id,role:'owner'},...selected.map(user_id=>({group_id:group.id,user_id,role:'member'}))];
+      const {error:membersError}=await db.from('conversation_group_members').insert(members);
+      if(membersError)throw membersError;
+      $('#modal').close();
+      await loadConversations();
+      const key='group_'+group.id;
+      app.groupConversationMap.set(key,group.id);
+      users[key]={name:group.name,handle:'Grup CodeKita',initials:initials(group.name),color:'avatar-me',bio:'Grup CodeKita'};
+      app.selectedConversation=key;
+      if(!conversations.some(c=>c.user===key))conversations.unshift({user:key,last:'Grup dibuat',time:'baru',active:true});
+      renderConversations();go('messages');await loadChat(key);
+      toast('Grup berhasil dibuat.');
+    } catch(error){fail(error)}
+  }
+  function openCreateGroupDialog(){
+    if(!requireUser())return;
+    const contacts=conversations.filter(c=>!String(c.user).startsWith('group_')&&users[c.user]?.id&&users[c.user].id!==app.user.id);
+    const options=contacts.map(c=>'<label class="group-member-option"><input type="checkbox" data-group-member value="'+escapeHtml(users[c.user].id)+'"><span>'+escapeHtml(users[c.user].name||'Pengguna')+'</span></label>').join('');
+    showModal('Buat grup','<label class="field"><span>Nama grup</span><input id="newGroupName" maxlength="80" placeholder="Contoh: Tim CodeKita" required></label><p class="muted">Pilih kontak yang ingin ditambahkan.</p><div class="group-member-picker">'+(options||'<p class="muted">Belum ada kontak yang dapat ditambahkan. Mulai percakapan pribadi terlebih dahulu.</p>')+'</div><button class="btn btn-primary btn-block" id="createGroupSubmit" type="button">Buat grup</button>','Tutup',()=>true);
   }
   function mountProjectPreviews(root=document) {
     const targets = [];
@@ -528,6 +601,26 @@
 
   document.addEventListener('click', async event => {
     const target=event.target;
+    const chatBack=target.closest('#chatBack');
+    if(chatBack){event.preventDefault();event.stopImmediatePropagation();app.selectedConversation=null;$('#page-messages').classList.remove('chat-active');$('#chatPersonName').textContent='Pilih percakapan';$('#chatPersonHandle').textContent='Pesan pribadi';$('#chatAvatar').textContent='?';$('#chatMessages').innerHTML='<div class="empty-state">Pilih kontak di sebelah kiri untuk mulai mengobrol.</div>';return}
+    const createGroupButton=target.closest('#newGroupButton,#newGroupIcon');
+    if(createGroupButton){event.preventDefault();event.stopImmediatePropagation();openCreateGroupDialog();return}
+    const createGroupSubmit=target.closest('#createGroupSubmit');
+    if(createGroupSubmit){event.preventDefault();event.stopImmediatePropagation();await createGroup();return}
+    const chatProfile=target.closest('#chatProfile');
+    if(chatProfile){
+      event.preventDefault();event.stopImmediatePropagation();
+      const key=app.selectedConversation;const person=users[key]||{};
+      if(!key){toast('Pilih kontak terlebih dahulu.');return}
+      if(app.groupConversationMap.has(key)){
+        const groupId=app.groupConversationMap.get(key);
+        const {data}=await db.from('conversation_group_members').select('user_id,role').eq('group_id',groupId);
+        showModal('Profil grup','<p><strong>'+escapeHtml(person.name||'Grup')+'</strong></p><p>'+((data||[]).length)+' anggota</p><p class="muted">Grup CodeKita</p>','Tutup',()=>true);
+      } else {
+        showModal('Profil kontak','<p><strong>'+escapeHtml(person.name||'Pengguna')+'</strong></p><p>'+escapeHtml(person.handle||'')+'</p><p>'+escapeHtml(person.bio||'')+'</p>','Tutup',()=>true);
+      }
+      return;
+    }
     const notification=target.closest('[data-notification-id]');
     if(notification){
       event.preventDefault();event.stopImmediatePropagation();
