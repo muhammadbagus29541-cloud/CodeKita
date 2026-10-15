@@ -356,6 +356,7 @@
     const input=$('#commentInput');const body=input?.value.trim();
     const p=getProject(state.currentProject);
     if(!p){toast('Proyek tidak ditemukan.');return}
+    if($('#commentMedia')?.files?.length){toast('Lampiran gambar/GIF belum tersimpan ke server. Hapus lampiran untuk mengirim komentar teks.');return}
     if(!body){toast('Tulis komentar sebelum mengirim.');input?.focus();return}
     try {
       const {error}=await db.from('comments').insert({project_id:p.id,user_id:app.user.id,body});
