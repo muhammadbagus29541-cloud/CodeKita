@@ -367,7 +367,7 @@
         const path=app.user.id+'/'+p.id+'/'+crypto.randomUUID()+'-'+safeName;
         const {error:uploadError}=await db.storage.from('comment-media').upload(path,file,{cacheControl:'3600',upsert:false,contentType:file.type||'image/gif'});
         if(uploadError)throw uploadError;
-        mediaUrl=db.storage.from('comment-media').getPublicUrl(path).data.publicUrl;
+        mediaUrl=path;
       }
       const {error}=await db.from('comments').insert({project_id:p.id,user_id:app.user.id,body:body||'Lampiran',media_url:mediaUrl});
       if(error)throw error;
@@ -394,14 +394,16 @@
       const e=document.createElement('p');e.className='muted';e.dataset.emptyComments='true';e.textContent='Belum ada komentar. Jadilah yang pertama berdiskusi.';panel.insertBefore(e,form);
       return;
     }
-    (data||[]).forEach(c=>{
+    for(const c of data||[]){
+      let signedMediaUrl=null;
+      if(c.media_url){const {data:signed,error:signedError}=await db.storage.from('comment-media').createSignedUrl(c.media_url,3600);if(!signedError)signedMediaUrl=signed?.signedUrl||null;}
       const person=c.profiles||{};const key=userKey(c.user_id);
       users[key]={id:c.user_id,name:person.display_name||'Pengguna',handle:'@'+(person.username||'pengguna'),initials:initials(person.display_name),color:'avatar-me',bio:person.bio||''};
       const row=document.createElement('div');row.className='comment-row';row.dataset.liveComment='true';
       const av=document.createElement('div');av.className='avatar avatar-me';av.textContent=initials(person.display_name);
       const content=document.createElement('div');content.className='comment-content';
-      const text=document.createElement('p');const strong=document.createElement('strong');strong.textContent=person.display_name||'Pengguna';text.append(strong,document.createElement('br'),document.createTextNode(c.body==='Lampiran'&&c.media_url?'':c.body));content.append(text);if(c.media_url){const media=document.createElement('img');media.src=c.media_url;media.alt='Lampiran komentar';media.className='comment-image';media.loading='lazy';content.append(media)}const small=document.createElement('small');small.textContent=timeAgo(c.created_at);content.append(small);row.append(av,content);panel.insertBefore(row,form);
-    });
+      const text=document.createElement('p');const strong=document.createElement('strong');strong.textContent=person.display_name||'Pengguna';text.append(strong,document.createElement('br'),document.createTextNode(c.body==='Lampiran'&&c.media_url?'':c.body));content.append(text);if(signedMediaUrl){const media=document.createElement('img');media.src=signedMediaUrl;media.alt='Lampiran komentar';media.className='comment-image';media.loading='lazy';content.append(media)}const small=document.createElement('small');small.textContent=timeAgo(c.created_at);content.append(small);row.append(av,content);panel.insertBefore(row,form);
+    }
   }
   async function saveEditorVersion() {
     if(!requireUser())return;
