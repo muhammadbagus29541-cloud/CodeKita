@@ -20,7 +20,7 @@
         <button class="nav-item active" data-page="home"><span>⌂</span>Beranda</button>
         <button class="nav-item" data-page="explore"><span>⌕</span>Jelajahi</button>
         <button class="nav-item" data-page="create"><span>＋</span>Buat</button>
-        <button class="nav-item" data-page="notifications"><span>♧</span>Notifikasi <i class="nav-dot"></i></button>
+        <button class="nav-item" data-page="notifications"><span>♧</span>Notifikasi</button>
         <button class="nav-item" data-page="messages"><span>✉</span>Pesan</button>
         <button class="nav-item" data-page="saved"><span>▣</span>Tersimpan</button>
         <button class="nav-item" data-page="profile"><span>◉</span>Profil</button>
@@ -101,7 +101,7 @@
       </section>
 
       <section class="page" id="page-profile">
-        <div class="profile-cover"></div><div class="profile-main"><div class="avatar profile-avatar avatar-me" id="profileAvatar">?</div><div class="profile-actions"><button class="btn btn-secondary" id="editProfile">Edit profil</button><button class="btn btn-secondary" id="shareProfile">↗ Bagikan</button></div><h1 id="profileName">Belum masuk</h1><p class="muted" id="profileHandle">@akun-belum-terhubung</p><p class="profile-bio" id="profileBio">Masuk untuk mengatur profilmu.</p><div class="profile-links"><span id="profileLocation"></span><span id="profileWebsite"></span></div><div class="profile-stats"><span><b id="profilePostCount">0</b> Postingan</span><span><b id="profileFollowerCount">0</b> Pengikut</span><span><b id="profileFollowingCount">0</b> Mengikuti</span></div><div class="profile-tabs"><button class="segment active" data-profile-tab="projects">Proyek</button><button class="segment" data-profile-tab="saved">Disimpan</button><button class="segment" data-profile-tab="reposts">Repost</button><button class="segment" data-profile-tab="collections">Koleksi</button></div><div class="project-grid" id="profileGrid"></div></div>
+        <div class="profile-cover"></div><div class="profile-main"><div class="avatar profile-avatar avatar-me" id="profileAvatar">?</div><div class="profile-actions"><button class="btn btn-secondary" id="editProfile">Edit profil</button><button class="btn btn-secondary" id="shareProfile">↗ Bagikan</button></div><h1 id="profileName">Belum masuk</h1><p class="muted" id="profileHandle">@akun-belum-terhubung</p><p class="profile-bio" id="profileBio">Masuk untuk mengatur profilmu.</p><div class="profile-links"><span id="profileLocation"></span><span id="profileWebsite"></span></div><div class="profile-stats"><span><b id="profilePostCount">0</b> Postingan</span><span><b id="profileFollowerCount">0</b> Pengikut</span><span><b id="profileFollowingCount">0</b> Mengikuti</span></div><div class="profile-tabs"><button class="segment active" data-profile-tab="projects">Proyek</button><button class="segment" data-profile-tab="reposts">Repost</button><button class="segment" data-profile-tab="collections">Koleksi</button></div><div class="project-grid" id="profileGrid"></div></div>
       </section>
 
       <section class="page" id="page-detail">
@@ -117,7 +117,7 @@
 
   <nav class="mobile-nav" aria-label="Navigasi mobile"><button class="active" data-page="home"><span>⌂</span><small>Beranda</small></button><button data-page="explore"><span>⌕</span><small>Jelajahi</small></button><button data-page="create"><span class="mobile-create">＋</span><small>Buat</small></button><button data-page="saved"><span>▣</span><small>Tersimpan</small></button><button data-page="profile"><span>◉</span><small>Profil</small></button></nav>
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
-  <dialog id="modal"><form method="dialog" class="modal-card"><button class="modal-close" aria-label="Tutup">×</button><div id="modalContent"></div></form></dialog>
+  <dialog id="modal"><form method="dialog" class="modal-card"><button type="button" class="modal-close" aria-label="Tutup" onclick="document.getElementById(\'modal\').close()">×</button><div id="modalContent"></div></form></dialog>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="supabase-config.js"></script>
   <script src="app.js"></script>
