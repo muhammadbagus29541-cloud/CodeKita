@@ -314,8 +314,11 @@
       app.ready=true;
       const banner=$('#backendBanner'); if(banner)banner.hidden=true;
     } catch(error) {
+      app.ready=false;
       updateAccountUi();
-      setStatus('<strong>Belum dapat memuat data.</strong> Periksa konfigurasi Supabase dan jalankan skema database sesuai README. Detail: '+escapeHtml(error.message||'koneksi gagal'),true);
+      setStatus('<strong>Belum dapat memuat data.</strong> CodeKita akan mencoba menghubungkan ulang otomatis. Detail: '+escapeHtml(error.message||'koneksi gagal'),true);
+      clearTimeout(reconnectTimer);
+      reconnectTimer=setTimeout(()=>reconnectBackend('initial data load'),2000);
     }
   }
   async function onLike(id) {
