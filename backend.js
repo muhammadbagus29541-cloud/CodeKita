@@ -601,6 +601,8 @@
 
   document.addEventListener('click', async event => {
     const target=event.target;
+    const chatBack=target.closest('#chatBack');
+    if(chatBack){event.preventDefault();event.stopImmediatePropagation();app.selectedConversation=null;$('#page-messages').classList.remove('chat-active');$('#chatPersonName').textContent='Pilih percakapan';$('#chatPersonHandle').textContent='Pesan pribadi';$('#chatAvatar').textContent='?';$('#chatMessages').innerHTML='<div class="empty-state">Pilih kontak di sebelah kiri untuk mulai mengobrol.</div>';return}
     const createGroupButton=target.closest('#newGroupButton,#newGroupIcon');
     if(createGroupButton){event.preventDefault();event.stopImmediatePropagation();openCreateGroupDialog();return}
     const createGroupSubmit=target.closest('#createGroupSubmit');
