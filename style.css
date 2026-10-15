@@ -186,3 +186,33 @@ body.dark-mode .modal-close {
 body.dark-mode .footer-links {
   color: var(--muted);
 }
+
+/* Respect the HTML hidden attribute for settings panels and previews. */
+[hidden] {
+  display: none !important;
+}
+body.dark-mode .settings-content,
+body.dark-mode .settings-nav {
+  background: var(--surface);
+  color: var(--ink);
+}
+body.dark-mode .settings-content [data-settings-section] {
+  color: var(--ink);
+}
+body.dark-mode .settings-content [data-settings-section] h2,
+body.dark-mode .settings-content [data-settings-section] strong {
+  color: var(--ink);
+}
+body.dark-mode .settings-content [data-settings-section] small {
+  color: var(--muted);
+}
+body.dark-mode .settings-tab {
+  color: var(--muted);
+}
+body.dark-mode .settings-tab.active {
+  background: var(--primary-soft);
+  color: #c7d2fe;
+}
+body.dark-mode .settings-note {
+  color: var(--muted);
+}
