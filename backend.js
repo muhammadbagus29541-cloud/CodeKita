@@ -465,7 +465,7 @@
     });
     $$('.project-card', root).forEach(card => {
       const preview = card.querySelector(':scope > .project-preview');
-      if (preview) targets.push({ host: preview.parentElement, id: card.dataset.openProject });
+      if (preview) targets.push({ host: preview, id: card.dataset.openProject });
     });
     const detail = $('.detail-preview-wrap', root);
     if (detail && state.currentProject) targets.push({ host: detail, id: state.currentProject, detail: true });
