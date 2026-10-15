@@ -31,3 +31,7 @@
 .modal-close{cursor:pointer}
 @media(min-width:900px){.top-actions [data-page="notifications"],.top-actions [data-page="messages"],.top-actions #profileShortcut{display:none}.sidebar-note{display:none}}
 @media(prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.01ms!important;transition-duration:.01ms!important;scroll-behavior:auto!important}}
+
+/* Use device/browser back navigation; modal dialogs can also be dismissed by Back/Escape */
+.mobile-close,.modal-close{display:none!important}
+.modal-card{position:relative}
