@@ -366,12 +366,16 @@
   renderFeed = function(){ const list=state.feed==='following'?allProjects().filter(p=>state.followed.has(p.user)):allProjects(); $('#feedPosts').innerHTML=list.length?list.slice(0,8).map(postMarkup).join(''):'<div class="empty-state"><strong>Belum ada proyek publik.</strong>Proyek yang dipublikasikan oleh pengguna akan muncul di sini.<br><button class="btn btn-primary" data-page="create" style="margin-top:14px">Buat proyek pertama</button></div>'; renderCreators(); };
   renderExplore = function(){ const query=($('#exploreSearch')?.value||$('#globalSearch')?.value||'').toLowerCase().trim(); const tech=$('#techFilter')?.value||'all'; const level=$('#levelFilter')?.value||'all'; const list=allProjects().filter(p=>(state.category==='Semua'||p.category===state.category||p.tags.includes(state.category))&&(tech==='all'||p.tags.includes(tech))&&(level==='all'||p.level===level)&&(!query||[p.title,p.description,users[p.user]?.name||'',users[p.user]?.handle||'',...p.tags].join(' ').toLowerCase().includes(query))); $('#exploreGrid').innerHTML=list.length?list.map(projectCard).join(''):'<div class="empty-state"><strong>Belum ada proyek yang cocok.</strong>Ubah filter atau kembali lagi setelah ada proyek publik.</div>'; $('#exploreCount').textContent=list.length+' proyek'; };
   renderSaved = function(){ const available=[...projects,...userProjects]; const list=available.filter(p=>state.saved.has(p.id)&&(state.savedCollection==='Semua'||p.collection===state.savedCollection)); $('#savedGrid').innerHTML=list.length?list.map(projectCard).join(''):'<div class="empty-state"><strong>Belum ada proyek tersimpan di koleksi ini.</strong>Simpan proyek yang ingin kamu pelajari nanti.</div>'; $('#savedTotal').textContent=state.saved.size+' proyek'; };
+  renderLiked = function(){ const available=[...projects,...userProjects]; const list=available.filter(p=>state.liked.has(p.id)); const grid=$('#likedGrid'); if(!grid)return; grid.innerHTML=list.length?list.map(projectCard).join(''):'<div class="empty-state"><strong>Belum ada proyek yang disukai.</strong>Tekan tombol Like pada proyek untuk menampilkannya di sini.</div>'; };
   function renderCurrentPage() {
     if (state.page==='detail') renderDetail();
     else if (state.page==='home') renderFeed();
     else if (state.page==='explore') renderExplore();
     else if (state.page==='saved') renderSaved();
-    else renderProfile();
+    else if (state.page==='liked') renderLiked();
+    else if (state.page==='notifications') renderNotifications();
+    else if (state.page==='messages') renderConversations();
+    else if (state.page==='profile') renderProfile();
     updateAccountUi();
   }
   async function publish() {
