@@ -334,9 +334,38 @@
     if(!requireUser())return;
     const exists=state.saved.has(id);
     try {
-      if(exists){const {error}=await db.from('bookmarks').delete().eq('project_id',id).eq('user_id',app.user.id);if(error)throw error;state.saved.delete(id)}
-      else {const selectedCollection=app.collectionRows.find(c=>c.name===state.savedCollection);const {error}=await db.from('bookmarks').insert({project_id:id,user_id:app.user.id,collection_id:selectedCollection?.id||null});if(error)throw error;state.saved.add(id)}
-      renderCurrentPage();
+      if(exists){
+        const {error}=await db.from('bookmarks').delete().eq('project_id',id).eq('user_id',app.user.id);
+        if(error)throw error;
+        state.saved.delete(id);
+        toast('Proyek dihapus dari Tersimpan.');
+        renderCurrentPage();
+        return;
+      }
+      await loadCollections();
+      const options=app.collectionRows.map(c=>'<option value="'+escapeHtml(c.id)+'">'+escapeHtml(c.name)+'</option>').join('');
+      showModal('Simpan proyek','<p>Pilih tempat untuk menyimpan proyek ini.</p><div class="field"><label for="bookmarkCollection">Simpan ke koleksi</label><select id="bookmarkCollection"><option value="">Semua tersimpan (tanpa koleksi khusus)</option>'+options+'<option value="__new__">＋ Buat koleksi baru</option></select></div><div class="field" id="newBookmarkCollectionWrap" hidden><label for="newBookmarkCollectionName">Nama koleksi baru</label><input id="newBookmarkCollectionName" maxlength="40" placeholder="Contoh: Inspirasi UI"></div>','Simpan',()=>true);
+      $('#bookmarkCollection').onchange=()=>{$('#newBookmarkCollectionWrap').hidden=$('#bookmarkCollection').value!=='__new__'};
+      $('#modalConfirm').onclick=async()=>{
+        const select=$('#bookmarkCollection');
+        let collectionId=select.value||null;
+        if(collectionId==='__new__'){
+          const name=$('#newBookmarkCollectionName').value.trim();
+          if(!name){toast('Masukkan nama koleksi baru.');return}
+          const {data,error}=await db.from('collections').insert({user_id:app.user.id,name}).select('id,name').single();
+          if(error){fail(error);return}
+          collectionId=data.id;
+          await loadCollections();
+        }
+        const {error}=await db.from('bookmarks').insert({project_id:id,user_id:app.user.id,collection_id:collectionId});
+        if(error){fail(error);return}
+        state.saved.add(id);
+        const project=[...projects,...userProjects].find(p=>p.id===id);
+        if(project)project.collection=app.collectionRows.find(c=>c.id===collectionId)?.name||'';
+        $('#modal').close();
+        toast('Proyek berhasil disimpan.');
+        renderCurrentPage();
+      };
     } catch(error){fail(error)}
   }
   async function onFollow(key) {
