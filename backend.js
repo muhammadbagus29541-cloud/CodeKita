@@ -374,13 +374,15 @@
     else renderProfile();
     updateAccountUi();
   }
-  async function publish(isDraft=false) {
+  async function publish() {
     if(!requireUser())return;
     const title=$('#projectTitle').value.trim();
     if(!title){toast('Nama proyek wajib diisi.');$('#projectTitle').focus();return}
-    const code=templateCode(state.selectedTemplate);
+    if($('#codeEditor'))state.editorCode[state.activeCodeTab]=$('#codeEditor').value;
+    const code={html:state.editorCode.html||'',css:state.editorCode.css||'',js:state.editorCode.js||''};
+    if(!code.html.trim()&&!code.css.trim()&&!code.js.trim()){toast('Editor masih kosong. Tulis kode HTML, CSS, atau JavaScript sebelum publikasi.');$('#codeEditor')?.focus();return}
     const visibility=$('input[name="visibility"]:checked')?.value||'public';
-    const payload={user_id:app.user.id,title,description:$('#projectDescription').value.trim(),tags:['HTML','CSS','JavaScript',$('#projectCategory').value],category:$('#projectCategory').value,level:$('#projectLevel').value,html_code:code.html,css_code:code.css,js_code:code.js,status:isDraft?'draft':'published',visibility};
+    const payload={user_id:app.user.id,title,description:$('#projectDescription').value.trim(),tags:['HTML','CSS','JavaScript',$('#projectCategory').value],category:$('#projectCategory').value,level:$('#projectLevel').value,html_code:code.html,css_code:code.css,js_code:code.js,status:'published',visibility};
     try {
       const {data,error}=await db.from('projects').insert(payload).select('id').single();
       if(error)throw error;
@@ -389,7 +391,8 @@
       $('#projectTitle').value='';$('#projectDescription').value='';
       go('detail');
       renderDetail();
-      toast(isDraft?'Draft tersimpan ke database.':'Proyek berhasil dipublikasikan.');
+      state.editorCode={html:'',css:'',js:''};state.activeCodeTab='html';
+      toast('Proyek berhasil dipublikasikan dengan kode dari editor.');
     } catch(error){fail(error)}
   }
   async function addComment() {
@@ -666,16 +669,15 @@
     const save=target.closest('[data-save]');if(save){event.preventDefault();event.stopImmediatePropagation();await onBookmark(save.dataset.save);return}
     const follow=target.closest('[data-follow]');if(follow){event.preventDefault();event.stopImmediatePropagation();await onFollow(follow.dataset.follow);return}
     const repost=target.closest('[data-repost]');if(repost){event.preventDefault();event.stopImmediatePropagation();await onRepost(repost.dataset.repost);return}
-    const menu=target.closest('[data-post-menu]');if(menu){event.preventDefault();event.stopImmediatePropagation();const id=menu.dataset.postMenu;const p=getProject(id);showModal('Opsi proyek','<p>'+escapeHtml(p?.title||'Proyek')+'</p><button type="button" class="btn btn-secondary btn-block" id="shareProject">Salin tautan proyek</button><button type="button" class="btn btn-secondary btn-block" id="reportProject" style="margin-top:8px">Laporkan proyek</button>','Tutup',()=>true);$('#shareProject').onclick=()=>{copyText(location.href.split('#')[0]+'#project-'+id);$('#modal').close()};$('#reportProject').onclick=()=>{$('#modal').close();reportProject(id)};return}
+    const menu=target.closest('[data-post-menu]');if(menu){event.preventDefault();event.stopImmediatePropagation();const id=menu.dataset.postMenu;const p=getProject(id);const isOwner=!!app.user&&p?.userId===app.user.id;showModal('Opsi proyek','<p>'+escapeHtml(p?.title||'Proyek')+'</p><button type="button" class="btn btn-secondary btn-block" id="shareProject">Salin tautan proyek</button>'+(isOwner?'<button type="button" class="btn btn-secondary btn-block" style="margin-top:8px;color:#c62828" id="deleteProject">Hapus postingan</button>':'<button type="button" class="btn btn-secondary btn-block" style="margin-top:8px" id="reportProject">Laporkan proyek</button>'),'Tutup',()=>true);$('#shareProject').onclick=()=>{copyText(location.href.split('#')[0]+'#project-'+id);$('#modal').close()};if(isOwner){$('#deleteProject').onclick=async()=>{if(!confirm('Hapus postingan ini secara permanen? Tindakan ini tidak dapat dibatalkan.'))return;try{const {error}=await db.from('projects').delete().eq('id',id).eq('user_id',app.user.id);if(error)throw error;$('#modal').close();if(state.currentProject===id)state.currentProject=null;await loadProjects();renderCurrentPage();toast('Postingan berhasil dihapus.')}catch(error){fail(error)}}}else $('#reportProject').onclick=()=>{$('#modal').close();reportProject(id)};return}
     const collect=target.closest('#newCollection');if(collect){event.preventDefault();event.stopImmediatePropagation();await createCollection();return}
     const edit=target.closest('#editProfile');if(edit){event.preventDefault();event.stopImmediatePropagation();await editProfile();return}
     const shareProfile=target.closest('#shareProfile');if(shareProfile){event.preventDefault();event.stopImmediatePropagation();copyText(location.href.split('#')[0]+'#profile-'+(app.profile?.username||''));return}
     const publishBtn=target.closest('#publishProject');if(publishBtn){event.preventDefault();event.stopImmediatePropagation();await publish(false);return}
-    const draftBtn=target.closest('#saveDraft');if(draftBtn){event.preventDefault();event.stopImmediatePropagation();await publish(true);return}
-    const editCode=target.closest('#editCodeBtn');if(editCode){event.preventDefault();event.stopImmediatePropagation();state.currentProject=userProjects.find(p=>p.status==='draft')?.id||userProjects.find(p=>p.userId===app.user?.id)?.id||null;go('create');if(!state.currentProject){state.editorCode={...templateCode(state.selectedTemplate)};$('#codeEditor').value=state.editorCode.html||'';updateLineCount()}return}
+    const editCode=target.closest('#editCodeBtn');if(editCode){event.preventDefault();event.stopImmediatePropagation();state.currentProject=userProjects.find(p=>p.status==='draft')?.id||userProjects.find(p=>p.userId===app.user?.id)?.id||null;go('create');if(!state.currentProject){state.editorCode={html:'',css:'',js:''};state.activeCodeTab='html';$('#codeEditor').value='';updateLineCount();syncCodeHighlight();renderEditorDiagnostics()}return}
     const mark=target.closest('#markRead');if(mark){event.preventDefault();event.stopImmediatePropagation();await markNotificationsRead();return}
     const remixSave=target.closest('#remixFromEditor');if(remixSave){event.preventDefault();event.stopImmediatePropagation();await saveEditorVersion();return}
-    const toCreate=target.closest('[data-page="create"]');if(toCreate&&!app.user){event.preventDefault();event.stopImmediatePropagation();openAuth('signin');return}
+    const toCreate=target.closest('[data-page="create"]');if(toCreate){state.currentProject=null;state.activeCodeTab='html';state.editorCode={html:'',css:'',js:''};if($('#projectTitle'))$('#projectTitle').value='';if($('#projectDescription'))$('#projectDescription').value='';if($('#projectCategory'))$('#projectCategory').selectedIndex=0;if($('#projectLevel'))$('#projectLevel').selectedIndex=0;const publicVisibility=$('input[name="visibility"][value="public"]');if(publicVisibility)publicVisibility.checked=true;const editor=$('#codeEditor');if(editor)editor.value='';updateLineCount();syncCodeHighlight();renderEditorDiagnostics();const preview=$('#editorPreview');if(preview)preview.innerHTML='<div class="preview-placeholder">Tulis kode lalu klik Jalankan untuk melihat hasil.</div>';if(!app.user){event.preventDefault();event.stopImmediatePropagation();openAuth('signin');return}}
     const messageUser=target.closest('[data-message-user]');if(messageUser){event.preventDefault();event.stopImmediatePropagation();if(!requireUser())return;const key=messageUser.dataset.messageUser;const targetId=users[key]?.id;if(!targetId||targetId===app.user.id){toast('Percakapan ini tidak tersedia.');return}app.conversationMap.set(key,targetId);app.selectedConversation=key;if(!conversations.some(c=>c.user===key))conversations.unshift({user:key,last:'Mulai percakapan',time:'baru',active:true});renderConversations();go('messages');await loadChat(key);return}
     const tab=target.closest('[data-conversation]');if(tab){event.preventDefault();event.stopImmediatePropagation();await loadChat(tab.dataset.conversation);return}
   }, true);
