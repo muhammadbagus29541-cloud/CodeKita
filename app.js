@@ -24,8 +24,8 @@ function projectPreviewMarkup(p){
  const code=p?.code||{};
  if(!((code.html||'').trim()||(code.css||'').trim()||(code.js||'').trim()))return previewMarkup(p?.type);
  const html=(code.html||'').replace(/<\/?body\b[^>]*>/gi,'').replace(/<\/?html\b[^>]*>/gi,'').replace(/<\/?head\b[^>]*>/gi,'').replace(/<!doctype[^>]*>/gi,'');
- const css=(code.css||'').replace(/<\/style/gi,'<\/style');
- const js=(code.js||'').replace(/<\/script/gi,'<\/script');
+ const css=(code.css||'').replace(/<\/style/gi,'<\\/style');
+ const js=(code.js||'').replace(/<\/script/gi,'<\\/script');
  const doc='<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><style>body{font-family:Arial,sans-serif}'+css+'</style></head><body>'+html+'<script>try{'+js+'}catch(e){}<\/script></body></html>';
  return '<iframe class="project-live-preview" title="Pratinjau proyek '+escapeHtml(p?.title||'')+'" sandbox="allow-scripts" loading="lazy" srcdoc="'+escapeHtml(doc)+'" style="width:100%;height:300px;border:0;display:block;background:white"></iframe>';
 }
