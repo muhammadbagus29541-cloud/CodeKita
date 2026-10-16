@@ -80,12 +80,12 @@
             <div class="field"><label>Visibilitas</label><div class="visibility-options"><label><input type="radio" name="visibility" value="public" checked> <span><b>Publik</b><small>Dapat ditemukan komunitas</small></span></label><label><input type="radio" name="visibility" value="private"> <span><b>Privat (simulasi)</b><small>Hanya terlihat di prototype ini</small></span></label></div></div>
             <div class="form-actions"><button class="btn btn-secondary" id="saveDraft">Simpan draft</button><button class="btn btn-primary" id="publishProject">Publikasikan proyek ↗</button></div>
           </div>
-          <div class="panel editor-panel integrated-studio">
+        </div>
+        <div class="panel editor-panel integrated-studio">
             <div class="panel-heading"><div><h3>Editor kode + live preview</h3><p class="muted small">HTML, CSS, dan JavaScript dalam satu halaman.</p></div></div>
             <div class="studio-layout"><div class="code-workspace"><div class="editor-tabs"><button class="segment active" data-code-tab="html">HTML</button><button class="segment" data-code-tab="css">CSS</button><button class="segment" data-code-tab="js">JavaScript</button><button class="icon-btn" id="copyActiveCode">▢ Salin</button></div><div class="code-editor-wrap"><pre id="codeHighlight" aria-hidden="true"></pre><div id="editorSuggestions" class="editor-suggestions" hidden></div><textarea id="codeEditor" spellcheck="false" aria-label="Editor kode" autocapitalize="off" autocomplete="off" autocorrect="off"></textarea></div><div class="editor-status"><span>● HTML / CSS / JavaScript</span><span id="editorLineCount">1 baris</span></div><div id="editorDiagnostics" class="editor-diagnostics" aria-live="polite"><strong class="diagnostic-ok">Tidak ditemukan masalah sintaks dasar.</strong></div></div><div class="workspace-preview"><div class="preview-toolbar"><strong>Preview</strong><div><button class="device-btn active" data-device="desktop">▰</button><button class="device-btn" data-device="mobile">▯</button><button class="icon-btn" id="refreshEditor">↻</button></div></div><div class="preview-frame" id="editorPreview"><div class="preview-placeholder">Klik Jalankan untuk melihat hasil.</div></div><div class="editor-bottom-actions"><button class="btn btn-secondary" id="copyAllCode">Salin semua kode</button><button class="btn btn-secondary" id="downloadCode">Unduh HTML</button><button class="btn btn-primary" id="remixFromEditor">Simpan versi</button></div></div></div>
             <div hidden id="legacyCreatePreview"><div id="createPreview"></div><pre id="codeSnippet"></pre></div>
           </div>
-        </div>
       </section>
 
       <section class="page" id="page-notifications">
