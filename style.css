@@ -411,3 +411,12 @@ body.dark-mode #modal .group-member-option {
   background-color: #202a40 !important;
   color: var(--ink) !important;
 }
+
+
+/* Integrated project creation and code editor */
+.integrated-studio{margin-top:18px;padding:16px;min-width:0}
+.integrated-studio>.studio-layout{width:100%;min-height:560px;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:14px}
+.integrated-studio .code-workspace,.integrated-studio .workspace-preview{min-width:0}
+.integrated-studio .code-editor-wrap{min-height:480px}
+.integrated-studio .workspace-preview .preview-frame{min-height:360px}
+@media(max-width:800px){.integrated-studio{padding:10px}.integrated-studio>.studio-layout{grid-template-columns:minmax(0,1fr);min-height:0}.integrated-studio .code-editor-wrap{min-height:340px}.integrated-studio .workspace-preview .preview-frame{min-height:300px}}
